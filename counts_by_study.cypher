@@ -1,8 +1,7 @@
         MATCH (st:study)<-[:of_participant]-(p:participant)
-        where st.phs_accession='phs002517' and p.ethnicity='Hispanic or Latino'
         with st, count(p) as num_p
         MATCH (st)<-[:of_participant]-(p)<-[:of_diagnosis]-(dg:diagnosis)
-        where st.phs_accession='phs002517' and p.ethnicity='Hispanic or Latino'
+        where st.phs_accession='phs002517' 
         with st, num_p, dg.diagnosis_classification as dg_cancers, count(dg.diagnosis_classification) as num_cancers, count(dg.id) as count_of_diag
         ORDER BY num_cancers desc
         with st, num_p, collect(dg_cancers + ' (' + toString(num_cancers) + ')') as cancers, sum(count_of_diag) as num_of_diag
