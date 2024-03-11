@@ -11,4 +11,5 @@ WHERE p.sex_at_birth IN ['Female'] and p.race contains 'Asian' and st.phs_access
         count(distinct st.id) as Studies,
         count(distinct p.id)as Participants,
           count(distinct sm.id) as Samples,
+          count(distinct dg.id) as Diagnosis,
         count(distinct file.id) + count(distinct file1.id) as Files
