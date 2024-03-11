@@ -18,11 +18,7 @@
         WHERE (cp:cell_line or cp:pdx)
         WITH st, num_p, cancers,  file_types, num_files, num_samples_1, count(distinct sm2.sample_id) as num_samples_2, num_of_diag
         WITH st, num_p, cancers,  file_types, num_files, num_samples_1 + num_samples_2 as num_samples, num_of_diag
-        MATCH (st)<-[*..5]-(file)
-        WHERE (file:clinical_measure_file OR file: sequencing_file OR file:pathology_file OR file:radiology_file OR file:methylation_array_file OR file:single_cell_sequencing_file OR file:cytogenomic_file)
-     
-                
-        WITH st, num_p, cancers,  file_types, num_files, num_samples, file.id as file_id,    num_of_diag
+
         RETURN DISTINCT
           st.id as id,
           st.study_id as study_id,
