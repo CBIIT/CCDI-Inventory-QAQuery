@@ -1,5 +1,5 @@
 MATCH (st:study)<-[:of_participant]-(p:participant)
-where p.sex_at_birth IN ['Female'] and p.race in ['Asian'] and st.phs_accession in ["phs002430"]
+where st.phs_accession in ["phs002430"]
 with st, count(p) as num_p
 MATCH (st)<-[:of_participant]-(participant)<-[:of_diagnosis]-(dg:diagnosis)
 with st, num_p, dg.diagnosis_classification as dg_cancers, count(dg.diagnosis_classification) as num_cancers
