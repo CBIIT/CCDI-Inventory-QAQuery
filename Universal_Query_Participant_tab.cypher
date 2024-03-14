@@ -163,7 +163,8 @@ with DISTINCT
   with id, participant_id, phs_accession, sex_at_birth, race_str, ethnicity_str, alternate_participant_id, diagnosis_filter, vital_status, sample_file_filters
   where diagnosis_filter.diagnosis_anatomic_site in [''] and diagnosis_filter.diagnosis_classification in [''] and diagnosis_filter.diagnosis_classification_system in [''] and diagnosis_filter.diagnosis_verification_status in [''] and diagnosis_filter.diagnosis_basis in [''] and diagnosis_filter.disease_phase in ['']
   with id, participant_id, phs_accession, sex_at_birth, race_str, ethnicity_str, alternate_participant_id, vital_status, sample_file_filters
-  where vital_status in ['']
+  //vital_status is array similarly with grand_id
+  where '' in vital_status 
   unwind sample_file_filters as sample_file_filter
   with id, participant_id, phs_accession, sex_at_birth, race_str, ethnicity_str, alternate_participant_id, sample_file_filter
   where sample_file_filter.sample_anatomic_site in [''] and sample_file_filter.sample_tumor_status in [''] and sample_file_filter.tumor_classification in [''] and sample_file_filter.assay_method in [''] and sample_file_filter.file_type in [''] and sample_file_filter.library_selection in [''] and sample_file_filter.library_source in [''] and sample_file_filter.library_strategy in ['']
