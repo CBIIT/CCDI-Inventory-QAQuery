@@ -155,7 +155,8 @@ with DISTINCT
   COLLECT(DISTINCT stp.institution) as institution,
   st.study_acronym as study_acronym,
   st.study_short_title as study_short_title
-  where grant_id in [''] and institution in [''] and study_acronym in [''] and study_short_title in ['']
+  //grant_id and institution are array, example would be: where 'CA016520-44S5' in grant_id
+  where '' in grant_id and '' in institution  and study_acronym in [''] and study_short_title in ['']
   with id, participant_id, phs_accession, sex_at_birth, race_str, ethnicity_str, alternate_participant_id, diagnosis_filters, vital_status, sample_file_filters
   where sex_at_birth in [''] and apoc.coll.contains(apoc.text.split(race_str, ';'), '') and apoc.coll.contains(apoc.text.split(ethnicity_str, ';'), '')
   unwind diagnosis_filters as diagnosis_filter
