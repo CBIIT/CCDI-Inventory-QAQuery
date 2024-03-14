@@ -7,18 +7,19 @@ WHERE st.phs_accession IN ['phs003111']
         where  dg.diagnosis_verification_status='Unknown' and dg.disease_phase='Progression'
         optional MATCH (p)<-[*..3]-(sm:sample)
   
-        WITH file, file1, p, st, sm, dg
-        return
-      sm.sample_id as `Sample ID`,
-          p.participant_id as `Participant ID`,
-          st.study_id as `Study ID`,
-          sm.anatomic_site as `Anatomic Site`,
-          case sm.participant_age_at_collection when -999 then 'Not Reported' else coalesce(sm.participant_age_at_collection, '') end as `Age at Sample Collection`,
-          coalesce(sm.diagnosis_classification, '') as `Diagnosis`,
-          coalesce(sm.diagnosis_classification_system, '') as `Diagnosis Classification System`,
-          coalesce(sm.diagnosis_verification_status, '') as `Diagnosis Verification Status`,
-          coalesce(sm.diagnosis_basis, '') as `Diagnosis Basis`,
-          coalesce(sm.diagnosis_comment, '') as `Diagnosis Comment`,
-          sm.sample_tumor_status as `Sample Tumor Status`,
-          sm.tumor_classification as `Sample Tumor Classification`
-Order by sm.sample_id Limit 100
+WITH DISTINCT p, st, sm, dg
+RETURN DISTINCT
+  sm.sample_id AS `Sample ID`,
+  p.participant_id AS `Participant ID`,
+  st.study_id AS `Study ID`,
+  sm.anatomic_site AS `Anatomic Site`,
+  CASE sm.participant_age_at_collection WHEN -999 THEN 'Not Reported' ELSE COALESCE(sm.participant_age_at_collection, '') END AS `Age at Sample Collection`,
+  COALESCE(sm.diagnosis_classification, '') AS `Diagnosis`,
+  COALESCE(sm.diagnosis_classification_system, '') AS `Diagnosis Classification System`,
+  COALESCE(sm.diagnosis_verification_status, '') AS `Diagnosis Verification Status`,
+  COALESCE(sm.diagnosis_basis, '') AS `Diagnosis Basis`,
+  COALESCE(sm.diagnosis_comment, '') AS `Diagnosis Comment`,
+  sm.sample_tumor_status AS `Sample Tumor Status`,
+  sm.tumor_classification AS `Sample Tumor Classification`
+ORDER BY `Sample ID`
+LIMIT 100
