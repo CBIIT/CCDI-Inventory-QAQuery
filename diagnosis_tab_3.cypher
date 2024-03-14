@@ -6,11 +6,18 @@ WHERE st.phs_accession IN ['phs003111']
         MATCH (p)<-[:of_diagnosis]-(dg:diagnosis)
         where  dg.diagnosis_verification_status='Unknown' and dg.disease_phase='Progression'
         optional MATCH (p)<-[*..3]-(sm:sample)
-  
-        WITH file, file1, p, st, sm, dg
+  OPTIONAL MATCH(fo:follow_up)-->(p)
+        WITH file, file1, p, st, sm, dg,fo
         return
-        count(distinct st.id) as Studies,
-        count(distinct p.id)as Participants,
-          count(distinct sm.id) as Samples,
-          count(distinct dg.id) as Diagnosis,
-        count(distinct file.id) + count(distinct file1.id) as Files
+        coalesce(p.participant_id, '') as `Participant ID`,
+coalesce(st.phs_accession, '') as `Study ID`,
+coalesce(dg.diagnosis_classification, '') as `Diagnosis`,
+coalesce(dg.diagnosis_classification_system, '') as `Diagnosis Classification System`,
+coalesce(dg.diagnosis_verification_status, '') as `Diagnosis Verification Status`,
+coalesce(dg.diagnosis_basis, '') as `Diagnosis Basis`,
+coalesce(dg.diagnosis_comment, '') as `Diagnosis Comment`,
+coalesce(dg.disease_phase, '') as `Disease Phase`,
+coalesce(dg.anatomic_site, '') as `Anatomic Site`,
+case dg.age_at_diagnosis when -999 then 'Not Reported' else coalesce(dg.age_at_diagnosis, '') end as `Age at diagnosis (days)`,
+coalesce(fo.vital_status, '') as `Vital Status`
+Order by p.participant_id
