@@ -9,7 +9,7 @@ where (file2: clinical_measure_file OR file2:radiology_file)
         where sm.sample_tumor_status ='Tumor'
         OPTIONAL MATCH (sm)<--(file)
         WHERE (file: sequencing_file OR file:pathology_file OR file:methylation_array_file OR file:single_cell_sequencing_file OR file:cytogenomic_file)
-        WITH file,file1,file2, p, st, sm, dg
+        WITH distinct p, st
         return         coalesce(p.participant_id, '') AS `Participant ID`,
   coalesce(st.phs_accession, '') AS `Study ID`,
   coalesce(p.sex_at_birth, '') AS `Sex` ,

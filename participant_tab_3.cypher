@@ -7,7 +7,7 @@ WHERE st.phs_accession IN ['phs003111']
         where  dg.diagnosis_verification_status='Unknown' and dg.disease_phase='Progression'
         optional MATCH (p)<-[*..3]-(sm:sample)
   
-        WITH file, file1, p, st, sm, dg
+        WITH distinct p, st
         return
       coalesce(p.participant_id, '') AS `Participant ID`,
   coalesce(st.phs_accession, '') AS `Study ID`,
