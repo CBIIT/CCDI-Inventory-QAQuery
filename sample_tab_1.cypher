@@ -1,23 +1,24 @@
 MATCH (st:study)<-[:of_participant]-(p:participant)
-WHERE p.ethnicity IN ['Hispanic or Latino']  and st.phs_accession IN ['phs003111']
-        OPTIONAL MATCH (p)<-[*..4]-(file)
-        WHERE (file:clinical_measure_file OR file: sequencing_file OR file:pathology_file OR file:radiology_file OR file:methylation_array_file OR file:single_cell_sequencing_file OR file:cytogenomic_file)
-        optional MATCH (st)<--(file1:clinical_measure_file)
-        MATCH (p)<-[:of_diagnosis]-(dg:diagnosis)
-        where dg.anatomic_site='C74.9 : Adrenal gland, NOS' and dg.diagnosis_classification='9500/3 : Neuroblastoma, NOS'
-        OPTIONAL MATCH (p)<-[*..3]-(sm:sample)
-        WITH file, file1, p, st, sm, dg
-        return
-  sm.sample_id as `Sample ID`,
-          p.participant_id as `Participant ID`,
-          st.study_id as `Study ID`,
-          sm.anatomic_site as `Anatomic Site`,
-          case sm.participant_age_at_collection when -999 then 'Not Reported' else coalesce(sm.participant_age_at_collection, '') end as `Age at Sample Collection`,
-          coalesce(sm.diagnosis_classification, '') as `Diagnosis`,
-          coalesce(sm.diagnosis_classification_system, '') as `Diagnosis Classification System`,
-          coalesce(sm.diagnosis_verification_status, '') as `Diagnosis Verification Status`,
-          coalesce(sm.diagnosis_basis, '') as `Diagnosis Basis`,
-          coalesce(sm.diagnosis_comment, '') as `Diagnosis Comment`,
-          sm.sample_tumor_status as `Sample Tumor Status`,
-          sm.tumor_classification as `Sample Tumor Classification`
-Order by sm.sample_id Limit 100
+WHERE p.ethnicity IN ['Hispanic or Latino'] AND st.phs_accession IN ['phs003111']
+OPTIONAL MATCH (p)<-[*..4]-(file)
+WHERE (file:clinical_measure_file OR file:sequencing_file OR file:pathology_file OR file:radiology_file OR file:methylation_array_file OR file:single_cell_sequencing_file OR file:cytogenomic_file)
+OPTIONAL MATCH (st)<--(file1:clinical_measure_file)
+MATCH (p)<-[:of_diagnosis]-(dg:diagnosis)
+WHERE dg.anatomic_site='C74.9 : Adrenal gland, NOS' AND dg.diagnosis_classification='9500/3 : Neuroblastoma, NOS'
+OPTIONAL MATCH (p)<-[*..3]-(sm:sample)
+WITH DISTINCT p, st, sm, dg
+RETURN DISTINCT
+  sm.sample_id AS `Sample ID`,
+  p.participant_id AS `Participant ID`,
+  st.study_id AS `Study ID`,
+  sm.anatomic_site AS `Anatomic Site`,
+  CASE sm.participant_age_at_collection WHEN -999 THEN 'Not Reported' ELSE COALESCE(sm.participant_age_at_collection, '') END AS `Age at Sample Collection`,
+  COALESCE(sm.diagnosis_classification, '') AS `Diagnosis`,
+  COALESCE(sm.diagnosis_classification_system, '') AS `Diagnosis Classification System`,
+  COALESCE(sm.diagnosis_verification_status, '') AS `Diagnosis Verification Status`,
+  COALESCE(sm.diagnosis_basis, '') AS `Diagnosis Basis`,
+  COALESCE(sm.diagnosis_comment, '') AS `Diagnosis Comment`,
+  sm.sample_tumor_status AS `Sample Tumor Status`,
+  sm.tumor_classification AS `Sample Tumor Classification`
+ORDER BY `Sample ID`
+LIMIT 100
