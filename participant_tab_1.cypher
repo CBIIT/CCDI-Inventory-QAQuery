@@ -6,7 +6,7 @@ WHERE p.ethnicity IN ['Hispanic or Latino']  and st.phs_accession IN ['phs003111
         MATCH (p)<-[:of_diagnosis]-(dg:diagnosis)
         where dg.anatomic_site='C74.9 : Adrenal gland, NOS' and dg.diagnosis_classification='9500/3 : Neuroblastoma, NOS'
         OPTIONAL MATCH (p)<-[*..3]-(sm:sample)
-        WITH file, file1, p, st, sm, dg
+        WITH distinct p, st
         return
   coalesce(p.participant_id, '') AS `Participant ID`,
   coalesce(st.phs_accession, '') AS `Study ID`,
