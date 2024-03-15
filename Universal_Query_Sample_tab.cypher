@@ -152,7 +152,7 @@ with id, sample_id, participant_id, study_id, sample_anatomic_site, sample_diagn
 where sample_anatomic_site in [''] and sample_tumor_status in [''] and tumor_classification in ['']
 unwind file_filters as file_filter
 with id, sample_id, participant_id, study_id, sample_anatomic_site, sample_diagnosis_classification, sample_diagnosis_classification_system, sample_diagnosis_verification_status, sample_diagnosis_basis, sample_diagnosis_comment, participant_age_at_collection, sample_tumor_status, tumor_classification, file_filter, phs_accession
-where file_filter.sample_anatomic_site in [''] and file_filter.sample_tumor_status in [''] and file_filter.tumor_classification in [''] and file_filter.assay_method in [''] and file_filter.file_type in [''] and file_filter.library_selection in [''] and file_filter.library_source in [''] and file_filter.library_strategy in ['']
+where file_filter.assay_method in [''] and file_filter.file_type in [''] and file_filter.library_selection in [''] and file_filter.library_source in [''] and file_filter.library_strategy in ['']
 with distinct id, sample_id, participant_id, study_id, sample_anatomic_site, sample_diagnosis_classification, sample_diagnosis_classification_system, sample_diagnosis_verification_status, sample_diagnosis_basis, sample_diagnosis_comment, participant_age_at_collection, sample_tumor_status, tumor_classification, phs_accession
 RETURN DISTINCT
           sample_id as `Sample ID`,

@@ -1,5 +1,5 @@
 Match (st:study)
-where st.phs_accession in [""]
+where st.phs_accession in ['']
 with st
 Call {
 with st
@@ -544,12 +544,12 @@ RETURN DISTINCT
 with id, guid, file_name, file_category, file_type, file_description, file_size, md5sum, study_id, phs_accession, study_acronym, study_short_title, participant_id, sample_id, participant_filters,diagnosis_filters, vital_status, sample_filters, grant_id, institution,library_selection,library_source,library_strategy
 unwind participant_filters as participant_filter
 with id, guid, file_name, file_category, file_type, file_description, file_size, md5sum, study_id, phs_accession, study_acronym, study_short_title, participant_id, sample_id, participant_filter,diagnosis_filters, vital_status, sample_filters, grant_id, institution,library_selection,library_source,library_strategy
-where participant_filter.sex_at_birth in [''] and '' in participant_filter.race and '' in participant_filter.ethnicity
+where participant_filter.sex_at_birth in [''] and ANY(element IN [''] WHERE element IN participant_filter.race) and ANY(element IN [''] WHERE element IN participant_filter.ethnicity)
 unwind diagnosis_filters as diagnosis_filter
 with id, guid, file_name, file_category, file_type, file_description, file_size, md5sum, study_id, phs_accession, study_acronym, study_short_title, participant_id, sample_id,diagnosis_filter, vital_status, sample_filters, grant_id, institution,library_selection,library_source,library_strategy
 where diagnosis_filter.diagnosis_anatomic_site in [''] and diagnosis_filter.diagnosis_classification in [''] and diagnosis_filter.diagnosis_classification_system in [''] and diagnosis_filter.diagnosis_verification_status in [''] and diagnosis_filter.diagnosis_basis in [''] and diagnosis_filter.disease_phase in ['']
 with id, guid, file_name, file_category, file_type, file_description, file_size, md5sum, study_id, phs_accession, study_acronym, study_short_title, participant_id, sample_id, vital_status, sample_filters, grant_id, institution,library_selection,library_source,library_strategy
-where '' in vital_status
+where ANY(element IN [''] WHERE element IN vital_status)
 unwind sample_filters as sample_filter
 with id, guid, file_name, file_category, file_type, file_description, file_size, md5sum, study_id, phs_accession, study_acronym, study_short_title, participant_id, sample_id, sample_filter, grant_id, institution,library_selection,library_source,library_strategy
 where sample_filter.sample_anatomic_site in [''] and sample_filter.sample_tumor_status in [''] and sample_filter.tumor_classification in ['']
@@ -587,7 +587,7 @@ call {
     null AS listr
 }
 with fid as id, dig as guid, fn as file_name, fc as file_category, ft as file_type, fd as file_description, fsize as file_size, md5 as md5sum, sid as study_id, pa as phs_accession, sa as study_acronym, sst as study_short_title, pid as participant_id, smid as sample_id, gid as grant_id, istt as institution,ls as library_selection,lis as library_source,listr as library_strategy
-where file_category in [] and file_type in [] and '' in grant_id and '' in institution and study_acronym in [''] and study_short_title in [''] and library_selection in [''] and library_source in [''] and library_strategy in ['']
+where file_category in [''] and file_type in [''] and ANY(element IN [''] WHERE element IN grant_id) and ANY(element IN [''] WHERE element IN institution) and study_acronym in [''] and study_short_title in [''] and library_selection in [''] and library_source in [''] and library_strategy in ['']
 with id, guid, file_name, file_category, file_type, file_description, file_size, ['Bytes', 'KB', 'MB', 'GB', 'TB'] AS units,
         toInteger(floor(log(file_size)/log(1024))) as i,
         2 as precision, md5sum, study_id, phs_accession, study_acronym, study_short_title, participant_id, sample_id, grant_id, institution,library_selection,library_source,library_strategy
