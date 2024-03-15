@@ -142,14 +142,14 @@ call {
 }
 where ANY(element IN [''] WHERE element IN grant_id) and ANY(element IN [''] WHERE element IN institution) and study_acronym in [''] and study_short_title in ['']
 with id, sample_id, participant_id, study_id, sex_at_birth, race, ethnicity, sample_anatomic_site, sample_diagnosis_classification, sample_diagnosis_classification_system, sample_diagnosis_verification_status, sample_diagnosis_basis, sample_diagnosis_comment, participant_age_at_collection, sample_tumor_status, tumor_classification, diagnosis_filters, vital_status, file_filters, phs_accession
-where sex_at_birth in [''] and ANY(element IN [''] WHERE element IN race) and ANY(element IN [''] WHERE element IN ethnicity)
+where participant_id in [''] and sex_at_birth in [''] and ANY(element IN [''] WHERE element IN race) and ANY(element IN [''] WHERE element IN ethnicity)
 unwind diagnosis_filters as diagnosis_filter
 with id, sample_id, participant_id, study_id, sample_anatomic_site, sample_diagnosis_classification, sample_diagnosis_classification_system, sample_diagnosis_verification_status, sample_diagnosis_basis, sample_diagnosis_comment, participant_age_at_collection, sample_tumor_status, tumor_classification, diagnosis_filter, vital_status, file_filters, phs_accession
-where diagnosis_filter.diagnosis_anatomic_site in [''] and diagnosis_filter.diagnosis_classification in [''] and diagnosis_filter.diagnosis_classification_system in [''] and diagnosis_filter.diagnosis_verification_status in [''] and diagnosis_filter.diagnosis_basis in [''] and diagnosis_filter.disease_phase in ['']
+where diagnosis_filter.age_at_diagnosis >= [''] and diagnosis_filter.age_at_diagnosis <= [''] and diagnosis_filter.diagnosis_anatomic_site in [''] and diagnosis_filter.diagnosis_classification in [''] and diagnosis_filter.diagnosis_classification_system in [''] and diagnosis_filter.diagnosis_verification_status in [''] and diagnosis_filter.diagnosis_basis in [''] and diagnosis_filter.disease_phase in ['']
 with id, sample_id, participant_id, study_id, sample_anatomic_site, sample_diagnosis_classification, sample_diagnosis_classification_system, sample_diagnosis_verification_status, sample_diagnosis_basis, sample_diagnosis_comment, participant_age_at_collection, sample_tumor_status, tumor_classification, vital_status, file_filters, phs_accession
 where ANY(element IN [''] WHERE element IN vital_status) 
 with id, sample_id, participant_id, study_id, sample_anatomic_site, sample_diagnosis_classification, sample_diagnosis_classification_system, sample_diagnosis_verification_status, sample_diagnosis_basis, sample_diagnosis_comment, participant_age_at_collection, sample_tumor_status, tumor_classification, file_filters, phs_accession
-where sample_anatomic_site in [''] and sample_tumor_status in [''] and tumor_classification in ['']
+where participant_age_at_collection >= [''] and participant_age_at_collection <= [''] and sample_anatomic_site in [''] and sample_tumor_status in [''] and tumor_classification in ['']
 unwind file_filters as file_filter
 with id, sample_id, participant_id, study_id, sample_anatomic_site, sample_diagnosis_classification, sample_diagnosis_classification_system, sample_diagnosis_verification_status, sample_diagnosis_basis, sample_diagnosis_comment, participant_age_at_collection, sample_tumor_status, tumor_classification, file_filter, phs_accession
 where file_filter.assay_method in [''] and file_filter.file_type in [''] and file_filter.library_selection in [''] and file_filter.library_source in [''] and file_filter.library_strategy in ['']

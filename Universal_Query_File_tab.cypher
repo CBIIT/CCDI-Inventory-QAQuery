@@ -544,15 +544,15 @@ RETURN DISTINCT
 with id, guid, file_name, file_category, file_type, file_description, file_size, md5sum, study_id, phs_accession, study_acronym, study_short_title, participant_id, sample_id, participant_filters,diagnosis_filters, vital_status, sample_filters, grant_id, institution,library_selection,library_source,library_strategy
 unwind participant_filters as participant_filter
 with id, guid, file_name, file_category, file_type, file_description, file_size, md5sum, study_id, phs_accession, study_acronym, study_short_title, participant_id, sample_id, participant_filter,diagnosis_filters, vital_status, sample_filters, grant_id, institution,library_selection,library_source,library_strategy
-where participant_filter.sex_at_birth in [''] and ANY(element IN [''] WHERE element IN participant_filter.race) and ANY(element IN [''] WHERE element IN participant_filter.ethnicity)
+where participant_id in [''] and participant_filter.sex_at_birth in [''] and ANY(element IN [''] WHERE element IN participant_filter.race) and ANY(element IN [''] WHERE element IN participant_filter.ethnicity)
 unwind diagnosis_filters as diagnosis_filter
 with id, guid, file_name, file_category, file_type, file_description, file_size, md5sum, study_id, phs_accession, study_acronym, study_short_title, participant_id, sample_id,diagnosis_filter, vital_status, sample_filters, grant_id, institution,library_selection,library_source,library_strategy
-where diagnosis_filter.diagnosis_anatomic_site in [''] and diagnosis_filter.diagnosis_classification in [''] and diagnosis_filter.diagnosis_classification_system in [''] and diagnosis_filter.diagnosis_verification_status in [''] and diagnosis_filter.diagnosis_basis in [''] and diagnosis_filter.disease_phase in ['']
+where diagnosis_filter.age_at_diagnosis >= [''] and diagnosis_filter.age_at_diagnosis <= [''] and diagnosis_filter.diagnosis_anatomic_site in [''] and diagnosis_filter.diagnosis_classification in [''] and diagnosis_filter.diagnosis_classification_system in [''] and diagnosis_filter.diagnosis_verification_status in [''] and diagnosis_filter.diagnosis_basis in [''] and diagnosis_filter.disease_phase in ['']
 with id, guid, file_name, file_category, file_type, file_description, file_size, md5sum, study_id, phs_accession, study_acronym, study_short_title, participant_id, sample_id, vital_status, sample_filters, grant_id, institution,library_selection,library_source,library_strategy
 where ANY(element IN [''] WHERE element IN vital_status)
 unwind sample_filters as sample_filter
 with id, guid, file_name, file_category, file_type, file_description, file_size, md5sum, study_id, phs_accession, study_acronym, study_short_title, participant_id, sample_id, sample_filter, grant_id, institution,library_selection,library_source,library_strategy
-where sample_filter.sample_anatomic_site in [''] and sample_filter.sample_tumor_status in [''] and sample_filter.tumor_classification in ['']
+where sample_filter.participant_age_at_collection >= [''] and sample_filter.participant_age_at_collection <= [''] and sample_filter.sample_anatomic_site in [''] and sample_filter.sample_tumor_status in [''] and sample_filter.tumor_classification in ['']
 with distinct id, guid, file_name, file_category, file_type, file_description, file_size, md5sum, study_id, phs_accession, study_acronym, study_short_title, participant_id, sample_id, grant_id, institution,library_selection,library_source,library_strategy
 call {
   with id, guid, file_name, file_category, file_type, file_description, file_size, md5sum, study_id, phs_accession, study_acronym, study_short_title, participant_id, sample_id, grant_id, institution,library_selection,library_source,library_strategy

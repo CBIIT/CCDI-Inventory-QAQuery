@@ -158,15 +158,15 @@ with DISTINCT
   st.study_short_title as study_short_title
   where ANY(element IN [''] WHERE element IN grant_id) and ANY(element IN [''] WHERE element IN institution) and study_acronym in [''] and study_short_title in ['']
   with id, participant_id, phs_accession, sex_at_birth, race_str, ethnicity_str, race, ethnicity, alternate_participant_id, diagnosis_filters, vital_status, sample_file_filters
-  where sex_at_birth in [''] and ANY(element IN [''] WHERE element IN race) and ANY(element IN [''] WHERE element IN ethnicity)
+  where participant_id in [''] and sex_at_birth in [''] and ANY(element IN [''] WHERE element IN race) and ANY(element IN [''] WHERE element IN ethnicity)
   unwind diagnosis_filters as diagnosis_filter
   with id, participant_id, phs_accession, sex_at_birth, race_str, ethnicity_str, alternate_participant_id, diagnosis_filter, vital_status, sample_file_filters
-  where diagnosis_filter.diagnosis_anatomic_site in [''] and diagnosis_filter.diagnosis_classification in [''] and diagnosis_filter.diagnosis_classification_system in [''] and diagnosis_filter.diagnosis_verification_status in [''] and diagnosis_filter.diagnosis_basis in [''] and diagnosis_filter.disease_phase in ['']
+  where diagnosis_filter.age_at_diagnosis >= [''] and diagnosis_filter.age_at_diagnosis <= [''] and diagnosis_filter.diagnosis_anatomic_site in [''] and diagnosis_filter.diagnosis_classification in [''] and diagnosis_filter.diagnosis_classification_system in [''] and diagnosis_filter.diagnosis_verification_status in [''] and diagnosis_filter.diagnosis_basis in [''] and diagnosis_filter.disease_phase in ['']
   with id, participant_id, phs_accession, sex_at_birth, race_str, ethnicity_str, alternate_participant_id, vital_status, sample_file_filters
   where ANY(element IN [''] WHERE element IN vital_status)
   unwind sample_file_filters as sample_file_filter
   with id, participant_id, phs_accession, sex_at_birth, race_str, ethnicity_str, alternate_participant_id, sample_file_filter
-  where sample_file_filter.sample_anatomic_site in [''] and sample_file_filter.sample_tumor_status in [''] and sample_file_filter.tumor_classification in [''] and sample_file_filter.assay_method in [''] and sample_file_filter.file_type in [''] and sample_file_filter.library_selection in [''] and sample_file_filter.library_source in [''] and sample_file_filter.library_strategy in ['']
+  where sample_file_filter.participant_age_at_collection >= [''] and sample_file_filter.participant_age_at_collection <= [''] and sample_file_filter.sample_anatomic_site in [''] and sample_file_filter.sample_tumor_status in [''] and sample_file_filter.tumor_classification in [''] and sample_file_filter.assay_method in [''] and sample_file_filter.file_type in [''] and sample_file_filter.library_selection in [''] and sample_file_filter.library_source in [''] and sample_file_filter.library_strategy in ['']
   with distinct id, participant_id, phs_accession, sex_at_birth, race_str, ethnicity_str, alternate_participant_id
   return
   coalesce(participant_id, '') AS `Participant ID`,
