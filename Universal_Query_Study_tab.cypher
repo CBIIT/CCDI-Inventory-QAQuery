@@ -216,12 +216,12 @@ with DISTINCT
   RETURN DISTINCT
   study_short_title as `Study Short Title`,
   study_id as `Study ID`,
-  CASE WHEN size(diagnosis_cancer) > 5 THEN apoc.text.join(apoc.coll.remove(diagnosis_cancer, 5, 10000), "\n") + "\nRead More"  else apoc.text.join(diagnosis_cancer, "\n") END as `Diagnosis (Top 5)`,
-  CASE WHEN size(diagnosis_anatomic_site) > 5 THEN apoc.text.join(apoc.coll.remove(diagnosis_anatomic_site, 5, 10000), "\n") + "\nRead More"  else apoc.text.join(diagnosis_anatomic_site, "\n") END as `Diagnosis Anatomic Site (Top 5)`,
+  CASE WHEN size(diagnosis_cancer) > 5 THEN '="' + apoc.text.join(apoc.coll.remove(diagnosis_cancer, 5, 10000), '"&CHAR(10)&"') + '"&CHAR(10)&"Read More"'  else '="' + apoc.text.join(diagnosis_cancer, '"&CHAR(10)&"') + '"' END as `Diagnosis (Top 5)`,
+  CASE WHEN size(diagnosis_anatomic_site) > 5 THEN '="' + apoc.text.join(apoc.coll.remove(diagnosis_anatomic_site, 5, 10000), '"&CHAR(10)&"') + '"&CHAR(10)&"Read More"'  else '="' + apoc.text.join(diagnosis_anatomic_site, '"&CHAR(10)&"') + '"' END as `Diagnosis Anatomic Site (Top 5)`,
   num_of_participants as `Number of Participants`,
   num_of_samples as `Number of Samples`,
   num_of_files as `Number of Files`,
-  CASE WHEN size(file_types) > 5 THEN apoc.text.join(apoc.coll.remove(file_types, 5, 10000), "\n") + "\nRead More"  else apoc.text.join(file_types, "\n") END as `File Type (Top 5)`,
+  CASE WHEN size(file_types) > 5 THEN '="' + apoc.text.join(apoc.coll.remove(file_types, 5, 10000), '"&CHAR(10)&"') + '"&CHAR(10)&"Read More"'  else '="' + apoc.text.join(file_types, '"&CHAR(10)&"') + '"' END as `File Type (Top 5)`,
   pubmed_ids as `PubMed ID`,
   PIs as `Principal Investigator(s)`,
   grant_id as `Grant ID`
