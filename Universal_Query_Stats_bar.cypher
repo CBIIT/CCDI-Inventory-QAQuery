@@ -592,4 +592,4 @@ where file_category in [''] and file_type in [''] and ANY(element IN [''] WHERE 
 with DISTINCT id, study_id, unique_participant_id, sample_id
 with id, study_id, unique_participant_id, case sample_id when null then [null] else apoc.text.split(sample_id, ',') end as sample_ids
 unwind sample_ids as single_sample_id
-return count(distinct id) as Files, count(distinct study_id) as Studies, count(distinct unique_participant_id) as Participants, count(distinct single_sample_id) as Samples
+return count(distinct study_id) as Studies, count(distinct unique_participant_id) as Participants, count(distinct single_sample_id) as Samples, count(distinct id) as Files
