@@ -140,6 +140,7 @@ call {
           COLLECT(DISTINCT stf.grant_id) as grant_id,
           COLLECT(DISTINCT stp.institution) as institution
 }
+with id, sample_id, participant_id, study_id, sex_at_birth, race, ethnicity, sample_anatomic_site, sample_diagnosis_classification, sample_diagnosis_classification_system, sample_diagnosis_verification_status, sample_diagnosis_basis, sample_diagnosis_comment, participant_age_at_collection, sample_tumor_status, tumor_classification, diagnosis_filters, vital_status, file_filters, phs_accession, grant_id, institution, study_acronym, study_short_title
 where ANY(element IN [''] WHERE element IN grant_id) and ANY(element IN [''] WHERE element IN institution) and study_acronym in [''] and study_short_title in ['']
 with id, sample_id, participant_id, study_id, sex_at_birth, race, ethnicity, sample_anatomic_site, sample_diagnosis_classification, sample_diagnosis_classification_system, sample_diagnosis_verification_status, sample_diagnosis_basis, sample_diagnosis_comment, participant_age_at_collection, sample_tumor_status, tumor_classification, diagnosis_filters, vital_status, file_filters, phs_accession
 where participant_id in [''] and sex_at_birth in [''] and ANY(element IN [''] WHERE element IN race) and ANY(element IN [''] WHERE element IN ethnicity)
