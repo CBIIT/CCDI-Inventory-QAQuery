@@ -177,4 +177,4 @@ coalesce(disease_phase, '') as `Disease Phase`,
 coalesce(diagnosis_anatomic_site, '') as `Anatomic Site`,
 case age_at_diagnosis when -999 then 'Not Reported' else coalesce(age_at_diagnosis, '') end as `Age at diagnosis (days)`,
 coalesce(last_vital_status, '') as `Vital Status`
-Order by participant_id
+Order by participant_id limit 100
