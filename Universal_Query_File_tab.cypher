@@ -801,7 +801,10 @@ with DISTINCT id,
         participant_id,
         sample_id,
         guid,
-        md5sum
+        md5sum,
+        library_selection,
+        library_source,
+        library_strategy
 where id IS NOT NULL
 RETURN file_name AS `File Name`,
 file_category As `File Category`,
@@ -812,5 +815,8 @@ study_id As `Study ID`,
 coalesce(participant_id, '') As `Participant ID`,
 coalesce(sample_id, '') As `Sample ID`,
 guid As `GUID`,
-md5sum As `MD5Sum`
+md5sum As `MD5Sum`,
+coalesce(library_selection, '') As `Library Selection`,
+coalesce(library_source, '') As `Library Source`,
+coalesce(library_strategy, '') As `Library Strategy` 
 ORDER BY file_name LIMIT 100
