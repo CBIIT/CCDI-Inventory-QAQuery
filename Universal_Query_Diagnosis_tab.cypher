@@ -417,5 +417,5 @@ coalesce(diagnosis_classification_system, '') as `Diagnosis Classification Syste
 coalesce(diagnosis_basis, '') as `Diagnosis Basis`,
 coalesce(disease_phase, '') as `Disease Phase`,
 case age_at_diagnosis when -999 then 'Not Reported' else coalesce(age_at_diagnosis, '') end as `Age at diagnosis (days)`,
-coalesce(last_known_survival_status, '') as `Last Known Survival Status`
+coalesce(apoc.text.join(last_known_survival_status, ','), '') as `Last Known Survival Status`
 Order by participant_id limit 100

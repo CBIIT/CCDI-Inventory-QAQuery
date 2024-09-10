@@ -27,25 +27,25 @@ with st, collect(distinct file_c) as assay_method, collect(distinct file_t) as f
 where st.study_acronym in [''] and st.study_name in [''] 
         and assay_method in [''] and file_type in [''] 
         and library_selection in ['']  and library_source_material in [''] and library_source_molecule in [''] and library_strategy in ['']
-with st
+with distinct st
 match (st)<--(p:participant)
 with st, p, apoc.text.split(p.race, ',') as race
 where p.participant_id in [''] and p.sex_at_birth in [''] and ANY(element IN [''] WHERE element IN race)
-with st
+with distinct st
 match (st)<-[*..6]-(dg:diagnosis)
 with st, dg, apoc.text.split(dg.anatomic_site, ';') as diagnosis_anatomic_site
 where dg.age_at_diagnosis >= [''] and dg.age_at_diagnosis <= [''] and dg.diagnosis in [''] and ANY(element IN [''] WHERE element IN diagnosis_anatomic_site) and dg.diagnosis_classification_system in [''] and dg.diagnosis_basis in [''] and dg.disease_phase in ['']
-with st
+with distinct st
 match (st)<-[*..5]-(sm:sample)
 with st, sm, apoc.text.split(sm.anatomic_site, ';') as sample_anatomic_site
 where sm.participant_age_at_collection >= [''] and sm.participant_age_at_collection <= [''] and ANY(element IN [''] WHERE element IN sample_anatomic_site) and sm.sample_tumor_status in [''] and sm.tumor_classification in [''] 
-with st
-match (st)<--(p:participant)<--(sv:survival)
+with distinct st
+match (st)<--(p:participant)<--(su:survival)
 with st, p, COLLECT(DISTINCT su.last_known_survival_status) as vital_status
 with st, p, case when 'Dead' in vital_status then ['Dead']
           else vital_status end as last_known_survival_status
 where ANY(element IN [''] WHERE element IN last_known_survival_status) 
-with st
+with distinct st
 MATCH (st)<-[:of_participant]-(p:participant)
 with st, count(p) as num_p
 MATCH (st:study)<-[*..5]-(dg:diagnosis)

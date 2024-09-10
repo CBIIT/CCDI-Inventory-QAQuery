@@ -141,22 +141,22 @@ call {
                                   ELSE null END
                 }) END AS file_filters
 }
-with id, sample_id, participant_id, study_id, sex_at_birth, race, ethnicity, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, diagnosis_filters, last_known_survival_status, file_filters, dbgap_accession, study_acronym, study_name
+with id, sample_id, participant_id, study_id, sex_at_birth, race, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, diagnosis_filters, last_known_survival_status, file_filters, dbgap_accession, study_acronym, study_name
 where study_acronym in [''] and study_name in ['']
-with id, sample_id, participant_id, study_id, sex_at_birth, race, ethnicity, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, diagnosis_filters, last_known_survival_status, file_filters, dbgap_accession
+with id, sample_id, participant_id, study_id, sex_at_birth, race, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, diagnosis_filters, last_known_survival_status, file_filters, dbgap_accession
 where participant_id in [''] and sex_at_birth in [''] and ANY(element IN [''] WHERE element IN race)
 unwind diagnosis_filters as diagnosis_filter
-with id, sample_id, participant_id, study_id, sex_at_birth, race, ethnicity, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, diagnosis_filter, last_known_survival_status, file_filters, dbgap_accession
+with id, sample_id, participant_id, study_id, sex_at_birth, race, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, diagnosis_filter, last_known_survival_status, file_filters, dbgap_accession
 where diagnosis_filter.age_at_diagnosis >= [''] and diagnosis_filter.age_at_diagnosis <= [''] and diagnosis_filter.diagnosis in [''] and ANY(element IN [''] WHERE element IN diagnosis_filter.diagnosis_anatomic_site) and diagnosis_filter.diagnosis_classification_system in [''] and diagnosis_filter.diagnosis_basis in [''] and diagnosis_filter.disease_phase in ['']
-with id, sample_id, participant_id, study_id, sex_at_birth, race, ethnicity, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, last_known_survival_status, file_filters, dbgap_accession
+with id, sample_id, participant_id, study_id, sex_at_birth, race, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, last_known_survival_status, file_filters, dbgap_accession
 where ANY(element IN [''] WHERE element IN last_known_survival_status) 
-with id, sample_id, participant_id, study_id, sex_at_birth, race, ethnicity, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, file_filters, dbgap_accession
+with id, sample_id, participant_id, study_id, sex_at_birth, race, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, file_filters, dbgap_accession
 where participant_age_at_collection >= [''] and participant_age_at_collection <= [''] and ANY(element IN [''] WHERE element IN sample_anatomic_site) and sample_tumor_status in [''] and tumor_classification in ['']
 unwind file_filters as file_filter
-with id, sample_id, participant_id, study_id, sex_at_birth, race, ethnicity, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, file_filter, dbgap_accession
+with id, sample_id, participant_id, study_id, sex_at_birth, race, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, file_filter, dbgap_accession
 where file_filter.assay_method in [''] and file_filter.file_type in [''] 
       and file_filter.library_selection in [''] and file_filter.library_source_material in [''] and file_filter.library_source_molecule in [''] and file_filter.library_strategy in ['']
-with distinct id, sample_id, participant_id, study_id, sex_at_birth, race, ethnicity, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, dbgap_accession
+with distinct id, sample_id, participant_id, study_id, sex_at_birth, race, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, dbgap_accession
 RETURN DISTINCT
   sample_id as `Sample ID`,
   participant_id as `Participant ID`,
