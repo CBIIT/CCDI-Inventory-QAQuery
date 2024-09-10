@@ -10,7 +10,7 @@ Call {
   WHERE (file: sequencing_file OR file:pathology_file OR file:methylation_array_file OR file:cytogenomic_file) 
   with p, case COLLECT(distinct sm1) when [] then []
                 else COLLECT(DISTINCT {
-                        sample_anatomic_site: sm1.anatomic_site,
+                        sample_anatomic_site: apoc.text.split(sm1.anatomic_site, ';'),
                         participant_age_at_collection: sm1.participant_age_at_collection,
                         sample_tumor_status: sm1.sample_tumor_status,
                         tumor_classification: sm1.tumor_classification,
@@ -39,7 +39,7 @@ Call {
                     case COLLECT(distinct sm2) 
                     when [] then []
                     else COLLECT(DISTINCT {
-                        sample_anatomic_site: sm2.anatomic_site,
+                        sample_anatomic_site: apoc.text.split(sm2.anatomic_site, ';'),
                         participant_age_at_collection: sm2.participant_age_at_collection,
                         sample_tumor_status: sm2.sample_tumor_status,
                         tumor_classification: sm2.tumor_classification,
@@ -69,7 +69,7 @@ Call {
   OPTIONAL MATCH (p)<-[:of_sample]-(sm:sample)<--(file)
   WHERE (file: sequencing_file OR file:pathology_file OR file:methylation_array_file OR file:cytogenomic_file)
   with p, cell_line_pdx_file_filters, COLLECT(DISTINCT {
-                sample_anatomic_site: sm.anatomic_site,
+                sample_anatomic_site: apoc.text.split(sm.anatomic_site, ';'),
                 participant_age_at_collection: sm.participant_age_at_collection,
                 sample_tumor_status: sm.sample_tumor_status,
                 tumor_classification: sm.tumor_classification,
@@ -98,7 +98,7 @@ Call {
   with p, cell_line_pdx_file_filters, general_file_filters,sm, COLLECT(DISTINCT file1.file_type) as file1_types
   UNWIND (case file1_types when [] then [null] else file1_types end)  AS types_1
   with p, cell_line_pdx_file_filters, general_file_filters, COLLECT(DISTINCT {
-            sample_anatomic_site: sm.anatomic_site,
+            sample_anatomic_site: apoc.text.split(sm.anatomic_site, ';'),
             participant_age_at_collection: sm.participant_age_at_collection,
             sample_tumor_status: sm.sample_tumor_status,
             tumor_classification: sm.tumor_classification,
@@ -114,7 +114,7 @@ Call {
   with p, cell_line_pdx_file_filters, general_file_filters, participant_clinical_measure_file_filters, sm, COLLECT(DISTINCT file1.file_type) as file1_types
   UNWIND (case file1_types when [] then [null] else file1_types end)  AS types_1
   with p, cell_line_pdx_file_filters, general_file_filters, participant_clinical_measure_file_filters, COLLECT(DISTINCT {
-            sample_anatomic_site: sm.anatomic_site,
+            sample_anatomic_site: apoc.text.split(sm.anatomic_site, ';'),
             participant_age_at_collection: sm.participant_age_at_collection,
             sample_tumor_status: sm.sample_tumor_status,
             tumor_classification: sm.tumor_classification,
@@ -147,7 +147,8 @@ Call {
     dg.diagnosis_basis as diagnosis_basis,
     dg.tumor_grade_source as tumor_grade_source,
     dg.tumor_stage_source as tumor_stage_source,
-    dg.anatomic_site as diagnosis_anatomic_site,
+    apoc.text.split(dg.anatomic_site, ';') as diagnosis_anatomic_site,
+    dg.anatomic_site as diagnosis_anatomic_site_str,
     dg.age_at_diagnosis as age_at_diagnosis,
     p.participant_id as participant_id,
     apoc.text.split(p.race, ';') as race,
@@ -165,7 +166,7 @@ Call {
   optional match (sm)<-[*..3]-(file)
   where (file: sequencing_file OR file:pathology_file OR file:methylation_array_file OR file:cytogenomic_file)
   with dg, COLLECT(DISTINCT {
-            sample_anatomic_site: sm.anatomic_site,
+            sample_anatomic_site: apoc.text.split(sm.anatomic_site, ';'),
             participant_age_at_collection: sm.participant_age_at_collection,
             sample_tumor_status: sm.sample_tumor_status,
             tumor_classification: sm.tumor_classification,
@@ -195,7 +196,7 @@ Call {
   optional match (sm)<--(file)
   where (file: sequencing_file OR file:pathology_file OR file:methylation_array_file OR file:cytogenomic_file)
   with dg, sample_file_filter_1, COLLECT(DISTINCT {
-            sample_anatomic_site: sm.anatomic_site,
+            sample_anatomic_site: apoc.text.split(sm.anatomic_site, ';'),
             participant_age_at_collection: sm.participant_age_at_collection,
             sample_tumor_status: sm.sample_tumor_status,
             tumor_classification: sm.tumor_classification,
@@ -222,6 +223,7 @@ Call {
   with dg, apoc.coll.union(sample_file_filter_1, sample_file_filter_2) as sample_file_filter
   match (p:participant)<--(sm:sample)<--(dg)
   optional match (sm)<--(file)
+  where (file: sequencing_file OR file:pathology_file OR file:methylation_array_file OR file:cytogenomic_file)
   OPTIONAL MATCH (p)<-[:of_survival]-(su:survival)
   OPTIONAL MATCH (st:study)<-[:of_participant]-(p)
   OPTIONAL MATCH (st)<-[:of_study_personnel]-(stp:study_personnel)
@@ -239,7 +241,8 @@ Call {
     dg.diagnosis_basis as diagnosis_basis,
     dg.tumor_grade_source as tumor_grade_source,
     dg.tumor_stage_source as tumor_stage_source,
-    dg.anatomic_site as diagnosis_anatomic_site,
+    apoc.text.split(dg.anatomic_site, ';') as diagnosis_anatomic_site,
+    dg.anatomic_site as diagnosis_anatomic_site_str,
     dg.age_at_diagnosis as age_at_diagnosis,
     p.participant_id as participant_id,
     apoc.text.split(p.race, ';') as race,
@@ -266,7 +269,7 @@ Call {
   UNWIND (case files when [] then [null] else files end)  AS file
   with dg, sample, file
   with dg, COLLECT(DISTINCT {
-            sample_anatomic_site: sample.anatomic_site,
+            sample_anatomic_site: apoc.text.split(sample.anatomic_site, ';'),
             participant_age_at_collection: sample.participant_age_at_collection,
             sample_tumor_status: sample.sample_tumor_status,
             tumor_classification: sample.tumor_classification,
@@ -313,7 +316,8 @@ Call {
     dg.diagnosis_basis as diagnosis_basis,
     dg.tumor_grade_source as tumor_grade_source,
     dg.tumor_stage_source as tumor_stage_source,
-    dg.anatomic_site as diagnosis_anatomic_site,
+    apoc.text.split(dg.anatomic_site, ';') as diagnosis_anatomic_site,
+    dg.anatomic_site as diagnosis_anatomic_site_str,
     dg.age_at_diagnosis as age_at_diagnosis,
     p.participant_id as participant_id,
     apoc.text.split(p.race, ';') as race,
@@ -332,7 +336,7 @@ Call {
   optional match (sm)<--(file)
   where (file: sequencing_file OR file:pathology_file OR file:methylation_array_file OR file:cytogenomic_file)
   with dg, COLLECT(DISTINCT {
-            sample_anatomic_site: sm.anatomic_site,
+            sample_anatomic_site: apoc.text.split(sm.anatomic_site, ';'),
             participant_age_at_collection: sm.participant_age_at_collection,
             sample_tumor_status: sm.sample_tumor_status,
             tumor_classification: sm.tumor_classification,
@@ -375,7 +379,8 @@ Call {
     dg.diagnosis_basis as diagnosis_basis,
     dg.tumor_grade_source as tumor_grade_source,
     dg.tumor_stage_source as tumor_stage_source,
-    dg.anatomic_site as diagnosis_anatomic_site,
+    apoc.text.split(dg.anatomic_site, ';') as diagnosis_anatomic_site,
+    dg.anatomic_site as diagnosis_anatomic_site_str,
     dg.age_at_diagnosis as age_at_diagnosis,
     null as participant_id,
     null as race,
@@ -387,27 +392,27 @@ Call {
     null as last_known_survival_status,       
     sample_file_filter AS sample_file_filters
 }
-with id, participant_id, sample_id, diagnosis_id, dbgap_accession, study_acronym, study_name, sex_at_birth, race, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_classification_system, diagnosis_basis, disease_phase, last_known_survival_status, sample_file_filters
+with id, participant_id, sample_id, diagnosis_id, dbgap_accession, study_acronym, study_name, sex_at_birth, race, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_anatomic_site_str, diagnosis_classification_system, diagnosis_basis, disease_phase, last_known_survival_status, sample_file_filters
 where study_acronym in [''] and study_name in ['']
-with id, participant_id, sample_id, diagnosis_id, dbgap_accession, sex_at_birth, race, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_classification_system, diagnosis_basis, disease_phase, last_known_survival_status, sample_file_filters
+with id, participant_id, sample_id, diagnosis_id, dbgap_accession, sex_at_birth, race, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_anatomic_site_str, diagnosis_classification_system, diagnosis_basis, disease_phase, last_known_survival_status, sample_file_filters
 where participant_id in [''] and sex_at_birth in [''] and ANY(element IN [''] WHERE element IN race)
-with id, participant_id, sample_id, diagnosis_id, dbgap_accession, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_classification_system, diagnosis_basis, disease_phase, last_known_survival_status, sample_file_filters
-where age_at_diagnosis >= [''] and age_at_diagnosis <= [''] and diagnosis in [''] and diagnosis_anatomic_site in [''] and diagnosis_classification_system in [''] and diagnosis_basis in [''] and disease_phase in ['']
-with id, participant_id, sample_id, diagnosis_id, dbgap_accession, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_classification_system, diagnosis_basis, disease_phase, last_known_survival_status, sample_file_filters
+with id, participant_id, sample_id, diagnosis_id, dbgap_accession, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_anatomic_site_str, diagnosis_classification_system, diagnosis_basis, disease_phase, last_known_survival_status, sample_file_filters
+where age_at_diagnosis >= [''] and age_at_diagnosis <= [''] and diagnosis in [''] and ANY(element IN [''] WHERE element IN diagnosis_anatomic_site) and diagnosis_classification_system in [''] and diagnosis_basis in [''] and disease_phase in ['']
+with id, participant_id, sample_id, diagnosis_id, dbgap_accession, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_anatomic_site_str, diagnosis_classification_system, diagnosis_basis, disease_phase, last_known_survival_status, sample_file_filters
 where ANY(element IN [''] WHERE element IN last_known_survival_status) 
 unwind sample_file_filters as sample_file_filter
-with id, participant_id, sample_id, diagnosis_id, dbgap_accession, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_classification_system, diagnosis_basis, disease_phase, last_known_survival_status, sample_file_filter
-where sample_file_filter.participant_age_at_collection >= [''] and sample_file_filter.participant_age_at_collection <= [''] and sample_file_filter.sample_anatomic_site in [''] and sample_file_filter.sample_tumor_status in [''] and sample_file_filter.tumor_classification in [''] 
+with id, participant_id, sample_id, diagnosis_id, dbgap_accession, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_anatomic_site_str, diagnosis_classification_system, diagnosis_basis, disease_phase, last_known_survival_status, sample_file_filter
+where sample_file_filter.participant_age_at_collection >= [''] and sample_file_filter.participant_age_at_collection <= [''] and ANY(element IN [''] WHERE element IN sample_file_filter.sample_anatomic_site) and sample_file_filter.sample_tumor_status in [''] and sample_file_filter.tumor_classification in [''] 
       and sample_file_filter.assay_method in [''] and sample_file_filter.file_type in [''] 
       and sample_file_filter.library_selection in [''] and sample_file_filter.library_source_material in [''] and sample_file_filter.library_source_molecule in [''] and sample_file_filter.library_strategy in ['']
-with id, participant_id, sample_id, dbgap_accession, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_classification_system, diagnosis_basis, disease_phase, last_known_survival_status
-with distinct id, participant_id, sample_id, dbgap_accession, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_classification_system, diagnosis_basis, disease_phase, last_known_survival_status
+with id, participant_id, sample_id, dbgap_accession, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_anatomic_site_str, diagnosis_classification_system, diagnosis_basis, disease_phase, last_known_survival_status
+with distinct id, participant_id, sample_id, dbgap_accession, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_anatomic_site_str, diagnosis_classification_system, diagnosis_basis, disease_phase, last_known_survival_status
 return
 coalesce(participant_id, '') as `Participant ID`,
 coalesce(sample_id, '') as `Sample ID`,
 coalesce(dbgap_accession, '') as `Study ID`,
 coalesce(diagnosis, '') as `Diagnosis`,
-coalesce(diagnosis_anatomic_site, '') as `Diagnosis Anatomic Site`,
+coalesce(diagnosis_anatomic_site_str, '') as `Diagnosis Anatomic Site`,
 coalesce(diagnosis_classification_system, '') as `Diagnosis Classification System`,
 coalesce(diagnosis_basis, '') as `Diagnosis Basis`,
 coalesce(disease_phase, '') as `Disease Phase`,
