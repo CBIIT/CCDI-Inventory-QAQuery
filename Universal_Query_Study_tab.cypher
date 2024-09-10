@@ -33,11 +33,12 @@ with st, p, apoc.text.split(p.race, ',') as race
 where p.participant_id in [''] and p.sex_at_birth in [''] and ANY(element IN [''] WHERE element IN race)
 with st
 match (st)<-[*..6]-(dg:diagnosis)
-with st, dg
-where dg.age_at_diagnosis >= [''] and dg.age_at_diagnosis <= [''] and dg.diagnosis in [''] and dg.diagnosis_anatomic_site in [''] and dg.diagnosis_classification_system in [''] and dg.diagnosis_basis in [''] and dg.disease_phase in ['']
+with st, dg, apoc.text.split(dg.anatomic_site, ';') as diagnosis_anatomic_site
+where dg.age_at_diagnosis >= [''] and dg.age_at_diagnosis <= [''] and dg.diagnosis in [''] and ANY(element IN [''] WHERE element IN diagnosis_anatomic_site) and dg.diagnosis_classification_system in [''] and dg.diagnosis_basis in [''] and dg.disease_phase in ['']
 with st
 match (st)<-[*..5]-(sm:sample)
-where sm.participant_age_at_collection >= [''] and sm.participant_age_at_collection <= [''] and sm.sample_anatomic_site in [''] and sm.sample_tumor_status in [''] and sm.tumor_classification in [''] 
+with st, sm, apoc.text.split(sm.anatomic_site, ';') as sample_anatomic_site
+where sm.participant_age_at_collection >= [''] and sm.participant_age_at_collection <= [''] and ANY(element IN [''] WHERE element IN sample_anatomic_site) and sm.sample_tumor_status in [''] and sm.tumor_classification in [''] 
 with st
 match (st)<--(p:participant)<--(sv:survival)
 with st, p, COLLECT(DISTINCT su.last_known_survival_status) as vital_status
@@ -52,9 +53,12 @@ with st, num_p, dg.diagnosis as dg_cancers, count(dg.diagnosis) as num_cancers
 ORDER BY num_cancers desc
 with st, num_p, collect(dg_cancers + ' (' + toString(num_cancers) + ')') as cancers
 MATCH (st)<-[*..5]-(diag:diagnosis)
-with st, num_p, cancers, diag.anatomic_site as dg_sites, count(diag.anatomic_site) as num_sites
+with st, num_p, cancers, apoc.text.split(diag.anatomic_site, ';') as dg_sites
+unwind dg_sites as dg_site
+with st, num_p, cancers, dg_site
+with st, num_p, cancers, dg_site, count(dg_site) as num_sites
 ORDER BY num_sites desc
-with st, num_p, cancers, collect(dg_sites + ' (' + toString(num_sites) + ')') as sites
+with st, num_p, cancers, collect(dg_site + ' (' + toString(num_sites) + ')') as sites
 MATCH (st)<-[*..5]-(fl)
 WHERE (fl:clinical_measure_file OR fl: sequencing_file OR fl:pathology_file OR fl:radiology_file OR fl:methylation_array_file OR fl:cytogenomic_file)
 with st, num_p, cancers, sites, fl.file_type as ft, count(fl.file_type) as num_ft
