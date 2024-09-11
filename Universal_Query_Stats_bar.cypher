@@ -133,7 +133,10 @@ Call {
     MATCH (file)
     where (file: sequencing_file OR file:pathology_file OR file:methylation_array_file OR file:cytogenomic_file)
     MATCH (st)<--(p:participant)<-[*..3]-(sm:sample)<--(file)
+    where p.participant_id in [''] and p.sex_at_birth in [''] and ANY(element IN [''] WHERE element IN apoc.text.split(p.race, ';')) 
+            and sm.participant_age_at_collection >= [''] and sm.participant_age_at_collection <= [''] and ANY(element IN [''] WHERE element IN apoc.text.split(sm.anatomic_site, ';')) and sm.sample_tumor_status in [''] and sm.tumor_classification in ['']
     OPTIONAL MATCH (p)<-[:of_diagnosis]-(dg:diagnosis)
+    where dg.age_at_diagnosis >= [''] and dg.age_at_diagnosis <= [''] and dg.diagnosis in [''] and ANY(element IN [''] WHERE element IN apoc.text.split(dg.anatomic_site, ';')) and dg.diagnosis_classification_system in [''] and dg.diagnosis_basis in [''] and dg.disease_phase in ['']
     with file, COLLECT(DISTINCT {
                                 sample_anatomic_site: apoc.text.split(sm.anatomic_site, ';'),
                                 participant_age_at_collection: sm.participant_age_at_collection,
