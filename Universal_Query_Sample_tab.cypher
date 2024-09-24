@@ -3,83 +3,121 @@ where st.dbgap_accession in ['']
 with st
 call {
   with st
-  MATCH (sm:sample)
-  MATCH (st)<--(p:participant)<-[*..3]-(sm)
-  optional match (p)<--(dg:diagnosis)
-  with sm, COLLECT(DISTINCT {
-        age_at_diagnosis: dg.age_at_diagnosis,
-        diagnosis_anatomic_site: apoc.text.split(dg.anatomic_site, ';'),
-        disease_phase: dg.disease_phase,
-        diagnosis_classification_system: dg.diagnosis_classification_system,
-        diagnosis_basis: dg.diagnosis_basis,
-        tumor_grade_source: dg.tumor_grade_source,
-        tumor_stage_source: dg.tumor_stage_source,
-        diagnosis: dg.diagnosis
-    }) AS diagnosis_filter_1
-  MATCH (p:participant)<-[*..3]-(sm)
-  optional match (sm)<-[*..3]-(dg:diagnosis)
-  with sm, diagnosis_filter_1, COLLECT(DISTINCT {
-        age_at_diagnosis: dg.age_at_diagnosis,
-        diagnosis_anatomic_site: apoc.text.split(dg.anatomic_site, ';'),
-        disease_phase: dg.disease_phase,
-        diagnosis_classification_system: dg.diagnosis_classification_system,
-        diagnosis_basis: dg.diagnosis_basis,
-        tumor_grade_source: dg.tumor_grade_source,
-        tumor_stage_source: dg.tumor_stage_source,
-        diagnosis: dg.diagnosis
-    }) AS diagnosis_filter_2
-  with sm, apoc.coll.union(diagnosis_filter_1, diagnosis_filter_2) as diagnosis_filter
-  optional match (sm)<-[*..3]-(file)
-  WHERE (file: sequencing_file OR file:pathology_file OR file:methylation_array_file OR file:cytogenomic_file)
-  with sm, diagnosis_filter, COLLECT(DISTINCT {
-        assay_method: CASE LABELS(file)[0]
-                  WHEN 'sequencing_file' THEN 'Sequencing'
-                  WHEN 'cytogenomic_file' THEN 'Cytogenomic'
-                  WHEN 'pathology_file' THEN 'Pathology imaging'
-                  WHEN 'methylation_array_file' THEN 'Methylation array' 
-                  ELSE null END,
-        file_type: file.file_type,
-        library_selection: CASE LABELS(file)[0]
-                      WHEN 'sequencing_file' THEN file.library_selection
-                      ELSE null END,
-        library_source_material: CASE LABELS(file)[0]
-                      WHEN 'sequencing_file' THEN file.library_source_material
-                      ELSE null END,
-        library_source_molecule: CASE LABELS(file)[0]
-                      WHEN 'sequencing_file' THEN file.library_source_molecule
-                      ELSE null END,
-        library_strategy: CASE LABELS(file)[0]
-                      WHEN 'sequencing_file' THEN file.library_strategy
-                      ELSE null END
-    }) AS file_filter
-  MATCH (p:participant)<-[*..3]-(sm)
-  MATCH (st:study)<-[:of_participant]-(p)
-  optional match (sm)<-[*..3]-(file)
-  WHERE (file: sequencing_file OR file:pathology_file OR file:methylation_array_file OR file:cytogenomic_file)
-  OPTIONAL MATCH (p)<-[:of_survival]-(su:survival)
-  OPTIONAL MATCH (st)<-[:of_study_personnel]-(stp:study_personnel)
-  OPTIONAL MATCH (st)<-[:of_study_funding]-(stf:study_funding)
-  WITH sm, diagnosis_filter, file_filter, file, COLLECT(DISTINCT su.last_known_survival_status) as vital_status, p, st, stf, stp
+  MATCH (sm:sample)-[*..4]->(st)
+  WITH sm, {
+    id: sm.id,
+    sample_id: sm.sample_id,
+    sample_anatomic_site: apoc.text.split(sm.anatomic_site, ';'),
+    sample_anatomic_site_str: sm.anatomic_site,
+    participant_age_at_collection: sm.participant_age_at_collection,
+    sample_tumor_status: sm.sample_tumor_status,
+    tumor_classification: sm.tumor_classification
+  } AS opensearch_data
+  MATCH (sm)-[*..3]->(p:participant)
+  WITH sm, apoc.map.merge(opensearch_data, {
+    pid: p.id,
+    participant_id: p.participant_id,
+    race: apoc.text.split(p.race, ';'),
+    sex_at_birth: p.sex_at_birth
+  }) AS opensearch_data
+  OPTIONAL MATCH (sm)-[*..3]->(:participant)<--(dg:diagnosis)
+  WITH sm, opensearch_data, COLLECT(DISTINCT {
+    age_at_diagnosis: dg.age_at_diagnosis,
+    diagnosis_anatomic_site: apoc.text.split(dg.anatomic_site, ';'),
+    disease_phase: dg.disease_phase,
+    diagnosis_classification_system: dg.diagnosis_classification_system,
+    diagnosis_basis: dg.diagnosis_basis,
+    tumor_grade_source: dg.tumor_grade_source,
+    tumor_stage_source: dg.tumor_stage_source,
+    diagnosis: dg.diagnosis
+  }) AS diagnosis_filter
+  OPTIONAL MATCH (sm)<-[*..3]-(dg:diagnosis)
+  WITH sm, apoc.map.merge(opensearch_data, {
+    diagnosis_filters: apoc.coll.union(diagnosis_filter, COLLECT(DISTINCT{
+      age_at_diagnosis: dg.age_at_diagnosis,
+      diagnosis_anatomic_site: apoc.text.split(dg.anatomic_site, ';'),
+      disease_phase: dg.disease_phase,
+      diagnosis_classification_system: dg.diagnosis_classification_system,
+      diagnosis_basis: dg.diagnosis_basis,
+      tumor_grade_source: dg.tumor_grade_source,
+      tumor_stage_source: dg.tumor_stage_source,
+      diagnosis: dg.diagnosis
+    }))
+  }) AS opensearch_data
+  OPTIONAL MATCH (sm)<-[*..3]-(file:sequencing_file)
+  WITH sm, opensearch_data, COLLECT(DISTINCT {
+    assay_method: 'Sequencing',
+    file_type: file.file_type,
+    library_selection: file.library_selection,
+    library_source_material: file.library_source_material,
+    library_source_molecule: file.library_source_molecule,
+    library_strategy: file.library_strategy
+  }) AS file_filter
+  OPTIONAL MATCH (sm)<-[*..3]-(file:pathology_file)
+  WITH sm, opensearch_data, apoc.coll.union(file_filter, COLLECT(DISTINCT {
+    assay_method: 'Pathology imaging',
+    file_type: file.file_type,
+    library_selection: null,
+    library_source_material: null,
+    library_source_molecule: null,
+    library_strategy: null
+  })) AS file_filter
+  OPTIONAL MATCH (sm)<-[*..3]-(file:cytogenomic_file)
+  WITH sm, opensearch_data, apoc.coll.union(file_filter, COLLECT(DISTINCT {
+    assay_method: 'Cytogenomic',
+    file_type: file.file_type,
+    library_selection: null,
+    library_source_material: null,
+    library_source_molecule: null,
+    library_strategy: null
+  })) AS file_filter
+  OPTIONAL MATCH (sm)<-[*..3]-(file:methylation_array_file)
+  WITH sm, opensearch_data, apoc.coll.union(file_filter, COLLECT(DISTINCT {
+    assay_method: 'Methylation array',
+    file_type: file.file_type,
+    library_selection: null,
+    library_source_material: null,
+    library_source_molecule: null,
+    library_strategy: null
+  })) AS file_filter
+  WITH sm, apoc.map.merge(opensearch_data, {
+    file_filters: file_filter
+  }) AS opensearch_data
+  MATCH (sm)-[*..3]->(:participant)-[:of_participant]->(st:study)
+  WITH sm, apoc.map.merge(opensearch_data, {
+    study_id: st.study_id,
+    dbgap_accession: st.dbgap_accession,
+    study_acronym: st.study_acronym,
+    study_name: st.study_name
+  }) AS opensearch_data
+  OPTIONAL MATCH (sm)-[*..3]->(:participant)<-[:of_survival]-(su:survival)
+  WITH sm, opensearch_data, COLLECT(DISTINCT su.last_known_survival_status) as vital_status
+  WITH sm, apoc.map.merge(opensearch_data, {
+    last_known_survival_status: CASE 
+        WHEN 'Dead' IN vital_status THEN ['Dead']
+        ELSE vital_status 
+      END
+  }) AS opensearch_data
+  with opensearch_data
   RETURN DISTINCT
-    sm.id as id,
-    p.id as pid,
-    sm.sample_id as sample_id,
-    p.participant_id as participant_id,
-    apoc.text.split(p.race, ';') as race,
-    p.sex_at_birth as sex_at_birth,
-    apoc.text.split(sm.anatomic_site, ';') as sample_anatomic_site,
-    sm.anatomic_site as sample_anatomic_site_str,
-    sm.participant_age_at_collection as participant_age_at_collection,
-    sm.sample_tumor_status as sample_tumor_status,
-    sm.tumor_classification as tumor_classification,
-    st.study_id as study_id,
-    st.dbgap_accession as dbgap_accession,
-    st.study_acronym as study_acronym,
-    st.study_name as study_name,
-    diagnosis_filter AS diagnosis_filters,
-    case when 'Dead' in vital_status then ['Dead']
-          else vital_status end as last_known_survival_status,
-    file_filter AS file_filters
+    opensearch_data.id as id,
+    opensearch_data.pid as pid,
+    opensearch_data.sample_id as sample_id,
+    opensearch_data.participant_id as participant_id,
+    opensearch_data.race as race,
+    opensearch_data.sex_at_birth as sex_at_birth,
+    opensearch_data.sample_anatomic_site as sample_anatomic_site,
+    opensearch_data.sample_anatomic_site_str as sample_anatomic_site_str,
+    opensearch_data.participant_age_at_collection as participant_age_at_collection,
+    opensearch_data.sample_tumor_status as sample_tumor_status,
+    opensearch_data.tumor_classification as tumor_classification,
+    opensearch_data.study_id as study_id,
+    opensearch_data.dbgap_accession as dbgap_accession,
+    opensearch_data.study_acronym as study_acronym,
+    opensearch_data.study_name as study_name,
+    opensearch_data.diagnosis_filters AS diagnosis_filters,
+    opensearch_data.last_known_survival_status as last_known_survival_status,
+    opensearch_data.file_filters AS file_filters
   union all
     with st
     MATCH (sm:sample)
