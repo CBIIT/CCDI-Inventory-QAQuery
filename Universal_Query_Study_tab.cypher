@@ -1,6 +1,6 @@
 Match (st:study)
 where st.dbgap_accession in ['']
-match (st)<-[*..6]-(file)
+optional match (st)<-[*..6]-(file)
 where (file:clinical_measure_file or file:radiology_file or file:sequencing_file or file:pathology_file or file:methylation_array_file or file:cytogenomic_file)
 with st, CASE LABELS(file)[0]
                     WHEN 'clinical_measure_file' THEN 'Clinical data'
@@ -28,19 +28,19 @@ where st.study_acronym in [''] and st.study_name in ['']
         and assay_method in [''] and file_type in [''] 
         and library_selection in ['']  and library_source_material in [''] and library_source_molecule in [''] and library_strategy in ['']
 with distinct st
-match (st)<--(p:participant)
+optional match (st)<--(p:participant)
 with st, p, apoc.text.split(p.race, ',') as race
 where p.participant_id in [''] and p.sex_at_birth in [''] and ANY(element IN [''] WHERE element IN race)
 with distinct st
-match (st)<-[*..6]-(dg:diagnosis)
+optional match (st)<-[*..6]-(dg:diagnosis)
 with st, dg, apoc.text.split(dg.anatomic_site, ';') as diagnosis_anatomic_site
 where dg.age_at_diagnosis >= [''] and dg.age_at_diagnosis <= [''] and dg.diagnosis in [''] and ANY(element IN [''] WHERE element IN diagnosis_anatomic_site) and dg.diagnosis_classification_system in [''] and dg.diagnosis_basis in [''] and dg.disease_phase in ['']
 with distinct st
-match (st)<-[*..5]-(sm:sample)
+optional match (st)<-[*..5]-(sm:sample)
 with st, sm, apoc.text.split(sm.anatomic_site, ';') as sample_anatomic_site
 where sm.participant_age_at_collection >= [''] and sm.participant_age_at_collection <= [''] and ANY(element IN [''] WHERE element IN sample_anatomic_site) and sm.sample_tumor_status in [''] and sm.tumor_classification in [''] 
 with distinct st
-match (st)<--(p:participant)<--(su:survival)
+optional match (st)<--(p:participant)<--(su:survival)
 with st, p, COLLECT(DISTINCT su.last_known_survival_status) as vital_status
 with st, p, case when 'Dead' in vital_status then ['Dead']
           else vital_status end as last_known_survival_status
