@@ -612,7 +612,7 @@ Call {
     null AS library_source_molecule,
     null AS library_strategy
 }
-with id, guid, file_name, file_category, file_type, file_description, file_size, md5sum, study_id, study_acronym, study_name, pid, participant_id, sample_id, participant_filters, sample_diagnosis_filters, last_known_survival_status, library_selection,library_source_material, library_source_molecule, library_strategy
+with id, guid, file_name, file_category, file_type, file_description, file_size, md5sum, study_id, study_acronym, study_name, pid, participant_id, sample_id, case participant_filters when null then [null] else participant_filters end as participant_filters, sample_diagnosis_filters, last_known_survival_status, library_selection,library_source_material, library_source_molecule, library_strategy
 unwind participant_filters as participant_filter
 with id, guid, file_name, file_category, file_type, file_description, file_size, md5sum, study_id, study_acronym, study_name, pid, participant_id, sample_id, participant_filter, sample_diagnosis_filters, last_known_survival_status, library_selection,library_source_material, library_source_molecule, library_strategy
 where participant_id in [''] and participant_filter.sex_at_birth in [''] and ANY(element IN [''] WHERE element IN participant_filter.race)
