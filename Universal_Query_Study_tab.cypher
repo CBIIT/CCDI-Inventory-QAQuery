@@ -2,14 +2,7 @@ Match (st:study)
 where st.dbgap_accession in ['']
 optional match (st)<-[*..6]-(file)
 where (file:clinical_measure_file or file:radiology_file or file:sequencing_file or file:pathology_file or file:methylation_array_file or file:cytogenomic_file)
-with st, CASE LABELS(file)[0]
-                    WHEN 'clinical_measure_file' THEN 'Clinical data'
-                    WHEN 'radiology_file' THEN 'Radiology imaging'
-                    WHEN 'sequencing_file' THEN 'Sequencing'
-                    WHEN 'cytogenomic_file' THEN 'Cytogenomic'
-                    WHEN 'pathology_file' THEN 'Pathology imaging'
-                    WHEN 'methylation_array_file' THEN 'Methylation array'
-                    ELSE null END as file_c,
+with st, file,
         file.file_type as file_t,
         CASE LABELS(file)[0]
                         WHEN 'sequencing_file' THEN file.library_selection
@@ -23,9 +16,9 @@ with st, CASE LABELS(file)[0]
         CASE LABELS(file)[0]
                         WHEN 'sequencing_file' THEN file.library_strategy
                         ELSE null END as library_str
-with st, collect(distinct file_c) as assay_method, collect(distinct file_t) as file_type, collect(distinct library_s) as library_selection, collect(distinct library_source_mat) as library_source_material, collect(distinct library_source_mol) as library_source_molecule, collect(distinct library_str) as library_strategy
+with st, apoc.text.split(file.data_category, ';') as data_category, collect(distinct file_t) as file_type, collect(distinct library_s) as library_selection, collect(distinct library_source_mat) as library_source_material, collect(distinct library_source_mol) as library_source_molecule, collect(distinct library_str) as library_strategy
 where st.study_acronym in [''] and st.study_name in [''] 
-        and assay_method in [''] and file_type in [''] 
+        and data_category in [''] and file_type in [''] 
         and library_selection in ['']  and library_source_material in [''] and library_source_molecule in [''] and library_strategy in ['']
 with distinct st
 optional match (st)<--(p:participant)

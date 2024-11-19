@@ -46,7 +46,7 @@ call {
   }) AS opensearch_data
   OPTIONAL MATCH (sm)<-[*..3]-(file:sequencing_file)
   WITH sm, opensearch_data, COLLECT(DISTINCT {
-    assay_method: 'Sequencing',
+    data_category: apoc.text.split(file.data_category, ';'),
     file_type: file.file_type,
     library_selection: file.library_selection,
     library_source_material: file.library_source_material,
@@ -55,7 +55,7 @@ call {
   }) AS file_filter
   OPTIONAL MATCH (sm)<-[*..3]-(file:pathology_file)
   WITH sm, opensearch_data, apoc.coll.union(file_filter, COLLECT(DISTINCT {
-    assay_method: 'Pathology imaging',
+    data_category: apoc.text.split(file.data_category, ';'),
     file_type: file.file_type,
     library_selection: null,
     library_source_material: null,
@@ -64,7 +64,7 @@ call {
   })) AS file_filter
   OPTIONAL MATCH (sm)<-[*..3]-(file:cytogenomic_file)
   WITH sm, opensearch_data, apoc.coll.union(file_filter, COLLECT(DISTINCT {
-    assay_method: 'Cytogenomic',
+    data_category: apoc.text.split(file.data_category, ';'),
     file_type: file.file_type,
     library_selection: null,
     library_source_material: null,
@@ -73,7 +73,7 @@ call {
   })) AS file_filter
   OPTIONAL MATCH (sm)<-[*..3]-(file:methylation_array_file)
   WITH sm, opensearch_data, apoc.coll.union(file_filter, COLLECT(DISTINCT {
-    assay_method: 'Methylation array',
+    data_category: apoc.text.split(file.data_category, ';'),
     file_type: file.file_type,
     library_selection: null,
     library_source_material: null,
@@ -158,12 +158,7 @@ call {
       null as last_known_survival_status,
       CASE COLLECT(file) WHEN [] THEN []
                 ELSE COLLECT(DISTINCT {
-                    assay_method: CASE LABELS(file)[0]
-                              WHEN 'sequencing_file' THEN 'Sequencing'
-                              WHEN 'cytogenomic_file' THEN 'Cytogenomic'
-                              WHEN 'pathology_file' THEN 'Pathology imaging'
-                              WHEN 'methylation_array_file' THEN 'Methylation array' 
-                              ELSE null END,
+                    data_category: apoc.text.split(file.data_category, ';'),
                     file_type: file.file_type,
                     library_selection: CASE LABELS(file)[0]
                                   WHEN 'sequencing_file' THEN file.library_selection
@@ -192,7 +187,7 @@ with id, sample_id, participant_id, study_id, sex_at_birth, race, participant_ag
 where participant_age_at_collection >= [''] and participant_age_at_collection <= [''] and ANY(element IN [''] WHERE element IN sample_anatomic_site) and sample_tumor_status in [''] and tumor_classification in ['']
 unwind file_filters as file_filter
 with id, sample_id, participant_id, study_id, sex_at_birth, race, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, file_filter, dbgap_accession
-where file_filter.assay_method in [''] and file_filter.file_type in [''] 
+where file_filter.data_category in [''] and file_filter.file_type in [''] 
       and file_filter.library_selection in [''] and file_filter.library_source_material in [''] and file_filter.library_source_molecule in [''] and file_filter.library_strategy in ['']
 with distinct id, sample_id, participant_id, study_id, sex_at_birth, race, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, dbgap_accession
 RETURN DISTINCT

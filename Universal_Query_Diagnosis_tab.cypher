@@ -14,12 +14,7 @@ Call {
                         participant_age_at_collection: sm1.participant_age_at_collection,
                         sample_tumor_status: sm1.sample_tumor_status,
                         tumor_classification: sm1.tumor_classification,
-                        assay_method: CASE LABELS(file)[0]
-                                  WHEN 'sequencing_file' THEN 'Sequencing'
-                                  WHEN 'cytogenomic_file' THEN 'Cytogenomic'
-                                  WHEN 'pathology_file' THEN 'Pathology imaging'
-                                  WHEN 'methylation_array_file' THEN 'Methylation array'
-                                  ELSE null END,
+                        data_category: apoc.text.split(file.data_category, ';'),
                         file_type: CASE LABELS(file)[0]
                                   When null then null
                                   else file.file_type end,
@@ -43,12 +38,7 @@ Call {
                         participant_age_at_collection: sm2.participant_age_at_collection,
                         sample_tumor_status: sm2.sample_tumor_status,
                         tumor_classification: sm2.tumor_classification,
-                        assay_method: CASE LABELS(file)[0]
-                                  WHEN 'sequencing_file' THEN 'Sequencing'
-                                  WHEN 'cytogenomic_file' THEN 'Cytogenomic'
-                                  WHEN 'pathology_file' THEN 'Pathology imaging'
-                                  WHEN 'methylation_array_file' THEN 'Methylation array'
-                                  ELSE null END,
+                        data_category: apoc.text.split(file.data_category, ';'),
                         file_type: CASE LABELS(file)[0]
                                   When null then null
                                   else file.file_type end,
@@ -73,12 +63,7 @@ Call {
                 participant_age_at_collection: sm.participant_age_at_collection,
                 sample_tumor_status: sm.sample_tumor_status,
                 tumor_classification: sm.tumor_classification,
-                assay_method: CASE LABELS(file)[0]
-                          WHEN 'sequencing_file' THEN 'Sequencing'
-                          WHEN 'cytogenomic_file' THEN 'Cytogenomic'
-                          WHEN 'pathology_file' THEN 'Pathology imaging'
-                          WHEN 'methylation_array_file' THEN 'Methylation array' 
-                          ELSE null END,
+                data_category: apoc.text.split(file.data_category, ';'),
                 file_type: file.file_type,
                 library_selection: CASE LABELS(file)[0]
                               WHEN 'sequencing_file' THEN file.library_selection
@@ -102,7 +87,7 @@ Call {
             participant_age_at_collection: sm.participant_age_at_collection,
             sample_tumor_status: sm.sample_tumor_status,
             tumor_classification: sm.tumor_classification,
-            assay_method: CASE types_1 when null then null else 'Clinical data' end,
+            data_category: apoc.text.split(file1.data_category, ';'),
             file_type: types_1,
             library_selection: null,
             library_source_material: null,
@@ -118,7 +103,7 @@ Call {
             participant_age_at_collection: sm.participant_age_at_collection,
             sample_tumor_status: sm.sample_tumor_status,
             tumor_classification: sm.tumor_classification,
-            assay_method: CASE types_1 when null then null else 'Radiology imaging' end,
+            data_category: apoc.text.split(file1.data_category, ';'),
             file_type: types_1,
             library_selection: null,
             library_source_material: null,
@@ -170,12 +155,7 @@ Call {
             participant_age_at_collection: sm.participant_age_at_collection,
             sample_tumor_status: sm.sample_tumor_status,
             tumor_classification: sm.tumor_classification,
-            assay_method: CASE LABELS(file)[0]
-                          WHEN 'sequencing_file' THEN 'Sequencing'
-                          WHEN 'cytogenomic_file' THEN 'Cytogenomic'
-                          WHEN 'pathology_file' THEN 'Pathology imaging'
-                          WHEN 'methylation_array_file' THEN 'Methylation array'
-                          ELSE null END,
+            data_category: apoc.text.split(file.data_category, ';'),
             file_type: file.file_type,
             library_selection: CASE LABELS(file)[0]
                       WHEN 'sequencing_file' THEN file.library_selection
@@ -200,12 +180,7 @@ Call {
             participant_age_at_collection: sm.participant_age_at_collection,
             sample_tumor_status: sm.sample_tumor_status,
             tumor_classification: sm.tumor_classification,
-            assay_method: CASE LABELS(file)[0]
-                          WHEN 'sequencing_file' THEN 'Sequencing'
-                          WHEN 'cytogenomic_file' THEN 'Cytogenomic'
-                          WHEN 'pathology_file' THEN 'Pathology imaging'
-                          WHEN 'methylation_array_file' THEN 'Methylation array'
-                          ELSE null END,
+            data_category: apoc.text.split(file.data_category, ';'),
             file_type: file.file_type,
             library_selection: CASE LABELS(file)[0]
                       WHEN 'sequencing_file' THEN file.library_selection
@@ -273,12 +248,7 @@ Call {
             participant_age_at_collection: sample.participant_age_at_collection,
             sample_tumor_status: sample.sample_tumor_status,
             tumor_classification: sample.tumor_classification,
-            assay_method: CASE LABELS(file)[0]
-                          WHEN 'sequencing_file' THEN 'Sequencing'
-                          WHEN 'cytogenomic_file' THEN 'Cytogenomic'
-                          WHEN 'pathology_file' THEN 'Pathology imaging'
-                          WHEN 'methylation_array_file' THEN 'Methylation array'
-                          ELSE null END,
+            data_category: apoc.text.split(file.data_category, ';'),
             file_type: file.file_type,
             library_selection: CASE LABELS(file)[0]
                       WHEN 'sequencing_file' THEN file.library_selection
@@ -340,12 +310,7 @@ Call {
             participant_age_at_collection: sm.participant_age_at_collection,
             sample_tumor_status: sm.sample_tumor_status,
             tumor_classification: sm.tumor_classification,
-            assay_method: CASE LABELS(file)[0]
-                          WHEN 'sequencing_file' THEN 'Sequencing'
-                          WHEN 'cytogenomic_file' THEN 'Cytogenomic'
-                          WHEN 'pathology_file' THEN 'Pathology imaging'
-                          WHEN 'methylation_array_file' THEN 'Methylation array'
-                          ELSE null END,
+            data_category: apoc.text.split(file.data_category, ';'),
             file_type: file.file_type,
             library_selection: CASE LABELS(file)[0]
                       WHEN 'sequencing_file' THEN file.library_selection
@@ -403,7 +368,7 @@ where ANY(element IN [''] WHERE element IN last_known_survival_status)
 unwind sample_file_filters as sample_file_filter
 with id, participant_id, sample_id, diagnosis_id, dbgap_accession, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_anatomic_site_str, diagnosis_classification_system, diagnosis_basis, disease_phase, last_known_survival_status, sample_file_filter
 where sample_file_filter.participant_age_at_collection >= [''] and sample_file_filter.participant_age_at_collection <= [''] and ANY(element IN [''] WHERE element IN sample_file_filter.sample_anatomic_site) and sample_file_filter.sample_tumor_status in [''] and sample_file_filter.tumor_classification in [''] 
-      and sample_file_filter.assay_method in [''] and sample_file_filter.file_type in [''] 
+      and sample_file_filter.data_category in [''] and sample_file_filter.file_type in [''] 
       and sample_file_filter.library_selection in [''] and sample_file_filter.library_source_material in [''] and sample_file_filter.library_source_molecule in [''] and sample_file_filter.library_strategy in ['']
 with id, participant_id, sample_id, dbgap_accession, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_anatomic_site_str, diagnosis_classification_system, diagnosis_basis, disease_phase, last_known_survival_status
 with distinct id, participant_id, sample_id, dbgap_accession, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_anatomic_site_str, diagnosis_classification_system, diagnosis_basis, disease_phase, last_known_survival_status
