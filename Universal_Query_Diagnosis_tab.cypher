@@ -392,21 +392,26 @@ Call {
     null as treatment_response_filters,     
     sample_file_filter AS sample_file_filters
 }
-with id, participant_id, sample_id, diagnosis_id, dbgap_accession, study_acronym, study_name, sex_at_birth, race, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_anatomic_site_str, diagnosis_classification_system, diagnosis_basis, disease_phase, last_known_survival_status, sample_file_filters
+with id, participant_id, sample_id, diagnosis_id, dbgap_accession, study_acronym, study_name, sex_at_birth, race, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_anatomic_site_str, diagnosis_classification_system, diagnosis_basis, disease_phase,  sample_file_filters, survival_filters, treatment_filters, treatment_response_filters
 where study_acronym in [''] and study_name in ['']
-with id, participant_id, sample_id, diagnosis_id, dbgap_accession, sex_at_birth, race, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_anatomic_site_str, diagnosis_classification_system, diagnosis_basis, disease_phase, last_known_survival_status, sample_file_filters
+with id, participant_id, sample_id, diagnosis_id, dbgap_accession, sex_at_birth, race, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_anatomic_site_str, diagnosis_classification_system, diagnosis_basis, disease_phase, sample_file_filters, survival_filters, treatment_filters, treatment_response_filters
 where participant_id in [''] and sex_at_birth in [''] and ANY(element IN [''] WHERE element IN race)
-with id, participant_id, sample_id, diagnosis_id, dbgap_accession, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_anatomic_site_str, diagnosis_classification_system, diagnosis_basis, disease_phase, last_known_survival_status, sample_file_filters
+with id, participant_id, sample_id, diagnosis_id, dbgap_accession, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_anatomic_site_str, diagnosis_classification_system, diagnosis_basis, disease_phase, sample_file_filters, survival_filters, treatment_filters, treatment_response_filters
 where age_at_diagnosis >= [''] and age_at_diagnosis <= [''] and diagnosis in [''] and ANY(element IN [''] WHERE element IN diagnosis_anatomic_site) and diagnosis_classification_system in [''] and diagnosis_basis in [''] and disease_phase in ['']
-with id, participant_id, sample_id, diagnosis_id, dbgap_accession, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_anatomic_site_str, diagnosis_classification_system, diagnosis_basis, disease_phase, last_known_survival_status, sample_file_filters
-where ANY(element IN [''] WHERE element IN last_known_survival_status) 
+with id, participant_id, sample_id, diagnosis_id, dbgap_accession, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_anatomic_site_str, diagnosis_classification_system, diagnosis_basis, disease_phase, sample_file_filters, survival_filters, treatment_filters, treatment_response_filters
 unwind sample_file_filters as sample_file_filter
-with id, participant_id, sample_id, diagnosis_id, dbgap_accession, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_anatomic_site_str, diagnosis_classification_system, diagnosis_basis, disease_phase, last_known_survival_status, sample_file_filter
+unwind survival_filters as survival_filter
+unwind treatment_filters as treatment_filter
+unwind treatment_response_filters as treatment_response_filter
+with id, participant_id, sample_id, diagnosis_id, dbgap_accession, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_anatomic_site_str, diagnosis_classification_system, diagnosis_basis, disease_phase, sample_file_filter, survival_filter, treatment_filter, treatment_response_filter
 where sample_file_filter.participant_age_at_collection >= [''] and sample_file_filter.participant_age_at_collection <= [''] and ANY(element IN [''] WHERE element IN sample_file_filter.sample_anatomic_site) and sample_file_filter.sample_tumor_status in [''] and sample_file_filter.tumor_classification in [''] 
       and sample_file_filter.data_category in [''] and sample_file_filter.file_type in [''] 
-      and sample_file_filter.library_selection in [''] and sample_file_filter.library_source_material in [''] and sample_file_filter.library_source_molecule in [''] and sample_file_filter.library_strategy in ['']
-with id, participant_id, sample_id, dbgap_accession, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_anatomic_site_str, diagnosis_classification_system, diagnosis_basis, disease_phase, last_known_survival_status
-with distinct id, participant_id, sample_id, dbgap_accession, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_anatomic_site_str, diagnosis_classification_system, diagnosis_basis, disease_phase, last_known_survival_status
+      and sample_file_filter.library_selection in [''] and sample_file_filter.library_source_material in [''] and sample_file_filter.library_source_molecule in [''] and sample_file_filter.library_strategy in [''] 
+      and survival_filter.last_known_survival_status in [''] and survival_filter.event_free_survival_status in [''] and survival_filter.first_event in ['']
+      and survival_filter.age_at_last_known_survival_status in [''] and treatment_filter.treatment_type in [''] and treatment_filter.treatment_agent in [''] and treatment_filter.age_at_treatment_start in ['']
+      and treatment_response_filter.response_category in [''] and treatment_response_filter.age_at_response in [''] 
+with id, participant_id, sample_id, dbgap_accession, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_anatomic_site_str, diagnosis_classification_system, diagnosis_basis, disease_phase
+with distinct id, participant_id, sample_id, dbgap_accession, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_anatomic_site_str, diagnosis_classification_system, diagnosis_basis, disease_phase
 return
 coalesce(participant_id, '') as `Participant ID`,
 coalesce(sample_id, '') as `Sample ID`,
