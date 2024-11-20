@@ -115,11 +115,21 @@ Call {
   OPTIONAL MATCH (p)<-[*..4]-(file)
   WHERE (file:clinical_measure_file OR file: sequencing_file OR file:pathology_file OR file:radiology_file OR file:methylation_array_file OR file:cytogenomic_file)
   OPTIONAL MATCH (p)<-[:of_survival]-(su:survival)
-  with p, cell_line_pdx_file_filters, general_file_filters, participant_clinical_measure_file_filters,participant_radiology_file_filters, dg, file, su
+  OPTIONAL MATCH (p)<-[:of_treatment]-(tm:treatment)
+  OPTIONAL MATCH (p)<-[:of_treatment_response]-(tr:treatment_response)
+  with p, cell_line_pdx_file_filters, general_file_filters, participant_clinical_measure_file_filters,participant_radiology_file_filters, dg, file, su, tm, tr
   OPTIONAL MATCH (st:study)<-[:of_participant]-(p)
   OPTIONAL MATCH (st)<-[:of_study_personnel]-(stp:study_personnel)
   OPTIONAL MATCH (st)<-[:of_study_funding]-(stf:study_funding)
-  WITH p, cell_line_pdx_file_filters, general_file_filters, participant_clinical_measure_file_filters,participant_radiology_file_filters, file, COLLECT(DISTINCT su.last_known_survival_status) as vital_status, st, stf, stp, dg
+  WITH p, cell_line_pdx_file_filters, general_file_filters, participant_clinical_measure_file_filters,participant_radiology_file_filters, file,  COLLECT(DISTINCT {last_known_survival_status: su.last_known_survival_status, 
+              event_free_survival_status: su.event_free_survival_status, 
+              first_event: su.first_event,
+              age_at_last_known_survival_status: su.age_at_last_known_survival_status} ) AS survival_filters, 
+          COLLECT(DISTINCT{treatment_type: tm.treatment_type,
+            treatment_agent: tm.treatment_agent,
+            age_at_treatment_start: tm.age_at_treatment_start}) as treatment_filters,
+            COLLECT(DISTINCT{response_category: tr.response_category,
+            age_at_response: tr.age_at_response}) as treatment_response_filters, st, stf, stp, dg
   RETURN DISTINCT
     dg.id as id,
     p.id as pid,
@@ -142,8 +152,9 @@ Call {
     st.dbgap_accession as dbgap_accession,
     st.study_acronym as study_acronym,
     st.study_name as study_name,
-    case when 'Dead' in vital_status then ['Dead']
-          else vital_status end as last_known_survival_status,       
+    survival_filters as survival_filters, 
+    treatment_filters as treatment_filters,
+    treatment_response_filters as treatment_response_filters,
     apoc.coll.union(cell_line_pdx_file_filters, general_file_filters) + participant_clinical_measure_file_filters + participant_radiology_file_filters AS sample_file_filters
   union all
   with st
@@ -200,10 +211,20 @@ Call {
   optional match (sm)<--(file)
   where (file: sequencing_file OR file:pathology_file OR file:methylation_array_file OR file:cytogenomic_file)
   OPTIONAL MATCH (p)<-[:of_survival]-(su:survival)
+  OPTIONAL MATCH (p)<-[:of_treatment]-(tm:treatment)
+  OPTIONAL MATCH (p)<-[:of_treatment_response]-(tr:treatment_response)
   OPTIONAL MATCH (st:study)<-[:of_participant]-(p)
   OPTIONAL MATCH (st)<-[:of_study_personnel]-(stp:study_personnel)
   OPTIONAL MATCH (st)<-[:of_study_funding]-(stf:study_funding)
-  WITH dg, p, sm, sample_file_filter, file, COLLECT(DISTINCT su.last_known_survival_status) as vital_status, st, stf, stp
+  WITH dg, p, sm, sample_file_filter, file, COLLECT(DISTINCT {last_known_survival_status: su.last_known_survival_status, 
+              event_free_survival_status: su.event_free_survival_status, 
+              first_event: su.first_event,
+              age_at_last_known_survival_status: su.age_at_last_known_survival_status} ) AS survival_filters, 
+          COLLECT(DISTINCT{treatment_type: tm.treatment_type,
+            treatment_agent: tm.treatment_agent,
+            age_at_treatment_start: tm.age_at_treatment_start}) as treatment_filters,
+            COLLECT(DISTINCT{response_category: tr.response_category,
+            age_at_response: tr.age_at_response}) as treatment_response_filters, st, stf, stp
   RETURN DISTINCT
     dg.id as id,
     p.id as pid,
@@ -226,8 +247,9 @@ Call {
     st.dbgap_accession as dbgap_accession,
     st.study_acronym as study_acronym,
     st.study_name as study_name,
-    case when 'Dead' in vital_status then ['Dead']
-          else vital_status end as last_known_survival_status,       
+    survival_filters as survival_filters, 
+    treatment_filters as treatment_filters,
+    treatment_response_filters as treatment_response_filters,     
     sample_file_filter AS sample_file_filters
   union all
   with st
@@ -270,10 +292,20 @@ Call {
   with dg, sample_file_filter, collect(distinct file.id) as files, apoc.coll.union(collect(distinct sm1.id), collect(distinct sm.id)) as sid, apoc.coll.union(collect(distinct sm1.sample_id), collect(distinct sm.sample_id))  as sample_id
   optional match (p:participant)<-[*..4]-(dg)
   OPTIONAL MATCH (p)<-[:of_survival]-(su:survival)
+  OPTIONAL MATCH (p)<-[:of_treatment]-(tm:treatment)
+  OPTIONAL MATCH (p)<-[:of_treatment_response]-(tr:treatment_response)
   OPTIONAL MATCH (st:study)<-[:of_participant]-(p)
   OPTIONAL MATCH (st)<-[:of_study_personnel]-(stp:study_personnel)
   OPTIONAL MATCH (st)<-[:of_study_funding]-(stf:study_funding)
-  WITH dg, p, sid, sample_id, sample_file_filter, files, COLLECT(DISTINCT su.last_known_survival_status) as vital_status, st, stf, stp
+  WITH dg, p, sid, sample_id, sample_file_filter, files, COLLECT(DISTINCT {last_known_survival_status: su.last_known_survival_status, 
+              event_free_survival_status: su.event_free_survival_status, 
+              first_event: su.first_event,
+              age_at_last_known_survival_status: su.age_at_last_known_survival_status} ) AS survival_filters, 
+          COLLECT(DISTINCT{treatment_type: tm.treatment_type,
+            treatment_agent: tm.treatment_agent,
+            age_at_treatment_start: tm.age_at_treatment_start}) as treatment_filters,
+            COLLECT(DISTINCT{response_category: tr.response_category,
+            age_at_response: tr.age_at_response}) as treatment_response_filters, st, stf, stp
   RETURN DISTINCT
     dg.id as id,
     p.id as pid,
@@ -295,9 +327,10 @@ Call {
     st.study_id as study_id,
     st.dbgap_accession as dbgap_accession,
     st.study_acronym as study_acronym,
-    st.study_name as study_name,
-    case when 'Dead' in vital_status then ['Dead']
-          else vital_status end as last_known_survival_status,       
+     st.study_name as study_name,
+    survival_filters as survival_filters, 
+    treatment_filters as treatment_filters,
+    treatment_response_filters as treatment_response_filters,         
     sample_file_filter AS sample_file_filters
   union all
   with st
@@ -354,7 +387,9 @@ Call {
     st.dbgap_accession as dbgap_accession,
     st.study_acronym as study_acronym,
     st.study_name as study_name,
-    null as last_known_survival_status,       
+    null as survival_filters, 
+    null as treatment_filters,
+    null as treatment_response_filters,     
     sample_file_filter AS sample_file_filters
 }
 with id, participant_id, sample_id, diagnosis_id, dbgap_accession, study_acronym, study_name, sex_at_birth, race, age_at_diagnosis, diagnosis, diagnosis_anatomic_site, diagnosis_anatomic_site_str, diagnosis_classification_system, diagnosis_basis, disease_phase, last_known_survival_status, sample_file_filters
@@ -381,6 +416,5 @@ coalesce(diagnosis_anatomic_site_str, '') as `Diagnosis Anatomic Site`,
 coalesce(diagnosis_classification_system, '') as `Diagnosis Classification System`,
 coalesce(diagnosis_basis, '') as `Diagnosis Basis`,
 coalesce(disease_phase, '') as `Disease Phase`,
-case age_at_diagnosis when -999 then 'Not Reported' else coalesce(age_at_diagnosis, '') end as `Age at diagnosis (days)`,
-coalesce(apoc.text.join(last_known_survival_status, ','), '') as `Last Known Survival Status`
+case age_at_diagnosis when -999 then 'Not Reported' else coalesce(age_at_diagnosis, '') end as `Age at diagnosis (days)`
 Order by participant_id limit 100
