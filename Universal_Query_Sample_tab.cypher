@@ -91,8 +91,8 @@ call {
     study_name: st.study_name
   }) AS opensearch_data
   OPTIONAL MATCH (sm)-[*..3]->(:participant)<-[:of_survival]-(su:survival)
-  OPTIONAL MATCH (sm)-[*..3]->(:participant)<-[:of_treatment]-(su:treatment)
-  OPTIONAL MATCH (sm)-[*..3]->(:participant)<-[:of_treatment_response]-(su:treatment_response)
+  OPTIONAL MATCH (sm)-[*..3]->(:participant)<-[:of_treatment]-(tm:treatment)
+  OPTIONAL MATCH (sm)-[*..3]->(:participant)<-[:of_treatment_response]-(tr:treatment_response)
   WITH sm, opensearch_data, COLLECT(DISTINCT {last_known_survival_status: su.last_known_survival_status, 
               event_free_survival_status: su.event_free_survival_status, 
               first_event: su.first_event,
