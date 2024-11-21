@@ -97,6 +97,15 @@ Call {
     OPTIONAL MATCH (p)<-[:of_treatment_response]-(tr:treatment_response)
     OPTIONAL MATCH (st)<-[:of_study_personnel]-(stp:study_personnel)
     OPTIONAL MATCH (st)<-[:of_study_funding]-(stf:study_funding)
+    with file, p, st, sample_diagnosis_filter,COLLECT(DISTINCT {last_known_survival_status: su.last_known_survival_status, 
+        event_free_survival_status: su.event_free_survival_status, 
+        first_event: su.first_event,
+        age_at_last_known_survival_status: su.age_at_last_known_survival_status} ) AS survival_filters,
+    COLLECT(DISTINCT{treatment_type: apoc.text.split(tm.treatment_type, ';'),
+    treatment_agent: apoc.text.split(tm.treatment_agent, ';'),
+    age_at_treatment_start: tm.age_at_treatment_start}) as treatment_filters,
+    COLLECT(DISTINCT{response_category: tr.response_category,
+    age_at_response: tr.age_at_response}) as treatment_response_filters
     RETURN DISTINCT
     file.id as id,
     p.id as pid,
@@ -106,8 +115,10 @@ Call {
             ELSE null END AS file_id,
     file.dcf_indexd_guid AS guid,
     file.file_name AS file_name,
-    apoc.text.split(file.data_category, ';') as data_category,
+    file.file_access AS file_access,
+    apoc.text.split(file.data_category, ';') As data_category,
     file.file_type AS file_type,
+    file.file_mapping_level as file_mapping_level,
     file.file_description AS file_description,
     file.file_size AS file_size,
     file.md5sum AS md5sum,
@@ -122,15 +133,9 @@ Call {
         sex_at_birth: p.sex_at_birth
     }) AS participant_filters,
     sample_diagnosis_filter AS sample_diagnosis_filters,
-    COLLECT(DISTINCT {last_known_survival_status: su.last_known_survival_status, 
-              event_free_survival_status: su.event_free_survival_status, 
-              first_event: su.first_event,
-              age_at_last_known_survival_status: su.age_at_last_known_survival_status} ) AS survival_filters,
-            COLLECT(DISTINCT{treatment_type: tm.treatment_type,
-            treatment_agent: tm.treatment_agent,
-            age_at_treatment_start: tm.age_at_treatment_start}) as treatment_filters,
-            COLLECT(DISTINCT{response_category: tr.response_category,
-            age_at_response: tr.age_at_response}) as treatment_response_filters,      
+    survival_filters as survival_filters,  
+    treatment_filters as treatment_filters,
+    treatment_response_filters as treatment_response_filters,
     null AS library_selection,
     null AS library_source_material,
     null AS library_source_molecule,
@@ -239,14 +244,16 @@ Call {
     MATCH (st:study)<-[:of_participant]-(p)
     OPTIONAL MATCH (st)<-[:of_publication]-(pub:publication)
     OPTIONAL MATCH (p)<-[:of_survival]-(su:survival)
+    OPTIONAL MATCH (p)<-[:of_treatment]-(tm:treatment)
+    OPTIONAL MATCH (p)<-[:of_treatment_response]-(tr:treatment_response)
     OPTIONAL MATCH (st)<-[:of_study_personnel]-(stp:study_personnel)
     OPTIONAL MATCH (st)<-[:of_study_funding]-(stf:study_funding)
     with file, p, sample_diagnosis_filter, sm1, sm, st, COLLECT(DISTINCT {last_known_survival_status: su.last_known_survival_status, 
               event_free_survival_status: su.event_free_survival_status, 
               first_event: su.first_event,
               age_at_last_known_survival_status: su.age_at_last_known_survival_status} ) AS survival_filters,
-            COLLECT(DISTINCT{treatment_type: tm.treatment_type,
-            treatment_agent: tm.treatment_agent,
+            COLLECT(DISTINCT{treatment_type: apoc.text.split(tm.treatment_type, ';'),
+            treatment_agent: apoc.text.split(tm.treatment_agent, ';'),
             age_at_treatment_start: tm.age_at_treatment_start}) as treatment_filters,
             COLLECT(DISTINCT{response_category: tr.response_category,
             age_at_response: tr.age_at_response}) as treatment_response_filters, stf, stp
@@ -260,8 +267,10 @@ Call {
             WHEN 'methylation_array_file' THEN file.methylation_array_file_id ELSE null END AS file_id,
     file.dcf_indexd_guid AS guid,
     file.file_name AS file_name,
-    apoc.text.split(file.data_category, ';') as data_category,
+    file.file_access AS file_access,
+    apoc.text.split(file.data_category, ';') As data_category,
     file.file_type AS file_type,
+    file.file_mapping_level AS file_mapping_level,
     file.file_description AS file_description,
     file.file_size AS file_size,
     file.md5sum AS md5sum,
@@ -277,8 +286,9 @@ Call {
         sex_at_birth: p.sex_at_birth
     }) AS participant_filters,
     sample_diagnosis_filter AS sample_diagnosis_filters,
-    case when 'Dead' in vital_status then ['Dead']
-            else vital_status end as last_known_survival_status,
+    survival_filters as survival_filters,
+    treatment_filters as treatment_filters,
+    treatment_response_filters as treatment_response_filters,
     CASE LABELS(file)[0] WHEN 'sequencing_file' THEN file.library_selection
                                 ELSE null END AS library_selection,
     CASE LABELS(file)[0] WHEN 'sequencing_file' THEN file.library_source_material
@@ -309,8 +319,10 @@ Call {
             WHEN 'methylation_array_file' THEN file.methylation_array_file_id ELSE null END AS file_id,
     file.dcf_indexd_guid AS guid,
     file.file_name AS file_name,
-    apoc.text.split(file.data_category, ';') as data_category,
+    file.file_access AS file_access,
+    apoc.text.split(file.data_category, ';') As data_category,
     file.file_type AS file_type,
+    file.file_mapping_level AS file_mapping_level,
     file.file_description AS file_description,
     file.file_size AS file_size,
     file.md5sum AS md5sum,
@@ -335,7 +347,9 @@ Call {
         tumor_stage_source: dg.tumor_stage_source,
         diagnosis: dg.diagnosis
     }) AS sample_diagnosis_filters, 
-    null as last_known_survival_status,
+    null as survival_filters,
+    null as treatment_filters,
+    null as treatment_response_filters,
     CASE LABELS(file)[0]
                 WHEN 'sequencing_file' THEN file.library_selection
                 ELSE null END AS library_selection,
@@ -450,8 +464,8 @@ Call {
               event_free_survival_status: su.event_free_survival_status, 
               first_event: su.first_event,
               age_at_last_known_survival_status: su.age_at_last_known_survival_status} ) AS survival_filters,
-            COLLECT(DISTINCT{treatment_type: tm.treatment_type,
-            treatment_agent: tm.treatment_agent,
+            COLLECT(DISTINCT{treatment_type: apoc.text.split(tm.treatment_type, ';'),
+            treatment_agent: apoc.text.split(tm.treatment_agent, ';'),
             age_at_treatment_start: tm.age_at_treatment_start}) as treatment_filters,
             COLLECT(DISTINCT{response_category: tr.response_category,
             age_at_response: tr.age_at_response}) as treatment_response_filters , stf, stp
@@ -461,8 +475,10 @@ Call {
     null AS file_id,
     null AS guid,
     null AS file_name,
-    null as data_category,
+    null AS file_access,
+    null AS data_category,
     null AS file_type,
+    null AS file_mapping_level,
     null AS file_description,
     null AS file_size,
     null AS md5sum,
@@ -476,9 +492,10 @@ Call {
         race: apoc.text.split(p.race, ';'),
         sex_at_birth: p.sex_at_birth
     }) AS participant_filters,
-    case when 'Dead' in vital_status then ['Dead']
-            else vital_status end as last_known_survival_status,         
-    sample_diagnosis_filter AS sample_diagnosis_filters,
+    sample_diagnosis_filter as sample_diagnosis_filters,
+    survival_filters as survival_filters,
+    treatment_filters as treatment_filters,
+    treatment_response_filters as treatment_response_filters,
     null AS library_selection,
     null AS library_source_material,
     null AS library_source_molecule,
@@ -497,8 +514,8 @@ Call {
               event_free_survival_status: su.event_free_survival_status, 
               first_event: su.first_event,
               age_at_last_known_survival_status: su.age_at_last_known_survival_status} ) AS survival_filters,
-            COLLECT(DISTINCT{treatment_type: tm.treatment_type,
-            treatment_agent: tm.treatment_agent,
+            COLLECT(DISTINCT{treatment_type: apoc.text.split(tm.treatment_type, ';'),
+            treatment_agent: apoc.text.split(tm.treatment_agent, ';'),
             age_at_treatment_start: tm.age_at_treatment_start}) as treatment_filters,
             COLLECT(DISTINCT{response_category: tr.response_category,
             age_at_response: tr.age_at_response}) as treatment_response_filters , stf, stp
@@ -508,8 +525,10 @@ Call {
     null AS file_id,
     null AS guid,
     null AS file_name,
+    null as file_access,
     null AS data_category,
     null AS file_type,
+    null as file_mapping_level,
     null AS file_description,
     null AS file_size,
     null AS md5sum,
@@ -558,8 +577,10 @@ Call {
     null AS file_id,
     null AS guid,
     null AS file_name,
+    null AS file_access,
     null AS data_category,
     null AS file_type,
+    null as file_mapping_level,
     null AS file_description,
     null AS file_size,
     null AS md5sum,
@@ -601,15 +622,25 @@ Call {
     OPTIONAL MATCH (p)<-[:of_treatment_response]-(tr:treatment_response)
     OPTIONAL MATCH (st)<-[:of_study_personnel]-(stp:study_personnel)
     OPTIONAL MATCH (st)<-[:of_study_funding]-(stf:study_funding)
-    with p, st, dg, COLLECT(DISTINCT su.last_known_survival_status) as vital_status, stf, stp
+    with p, st, dg, COLLECT(DISTINCT {last_known_survival_status: su.last_known_survival_status, 
+                event_free_survival_status: su.event_free_survival_status, 
+                first_event: su.first_event,
+                age_at_last_known_survival_status: su.age_at_last_known_survival_status} ) AS survival_filters,
+            COLLECT(DISTINCT{treatment_type: apoc.text.split(tm.treatment_type, ';'),
+            treatment_agent: apoc.text.split(tm.treatment_agent, ';'),
+            age_at_treatment_start: tm.age_at_treatment_start}) as treatment_filters,
+            COLLECT(DISTINCT{response_category: tr.response_category,
+            age_at_response: tr.age_at_response}) as treatment_response_filters, stf, stp          
     RETURN DISTINCT
     null as id,
     p.id as pid,
     null AS file_id,
     null AS guid,
     null AS file_name,
+    null AS file_access,
     null AS data_category,
     null AS file_type,
+    null as file_mapping_level,
     null AS file_description,
     null AS file_size,
     null AS md5sum,
@@ -637,33 +668,34 @@ Call {
         tumor_stage_source: dg.tumor_stage_source,
         diagnosis_classification: dg.diagnosis_classification
     }) AS sample_diagnosis_filters, 
-    case when 'Dead' in vital_status then ['Dead']
-            else vital_status end as last_known_survival_status,
+    survival_filters as survival_filters,
+    treatment_filters as treatment_filters,
+    treatment_response_filters as treatment_response_filters,
     null AS library_selection,
     null AS library_source_material,
     null AS library_source_molecule,
     null AS library_strategy
 }
-with id, guid, file_name, data_category, file_type, file_description, file_size, md5sum, study_id, study_acronym, study_name, participant_id, sample_id, participant_filters, sample_diagnosis_filters, last_known_survival_status, library_selection,library_source_material, library_source_molecule, library_strategy
+with id, guid, file_name, data_category, file_type, file_description, file_size, file_access, file_mapping_level, md5sum, study_id, study_acronym, study_name, participant_id, sample_id, participant_filters, sample_diagnosis_filters, survival_filters, treatment_filters, treatment_response_filters, library_selection,library_source_material, library_source_molecule, library_strategy
 unwind participant_filters as participant_filter
-with id, guid, file_name, data_category, file_type, file_description, file_size, md5sum, study_id, study_acronym, study_name, participant_id, sample_id, participant_filter, sample_diagnosis_filters, last_known_survival_status, library_selection,library_source_material, library_source_molecule, library_strategy
+with id, guid, file_name, data_category, file_type, file_description, file_size, file_access, file_mapping_level, md5sum, study_id, study_acronym, study_name, participant_id, sample_id, participant_filter, sample_diagnosis_filters, survival_filters, treatment_filters, treatment_response_filters, library_selection,library_source_material, library_source_molecule, library_strategy
 where participant_id in [''] and participant_filter.sex_at_birth in [''] and ANY(element IN [''] WHERE element IN participant_filter.race)
 unwind sample_diagnosis_filters as sample_diagnosis_filter
 unwind survival_filters as survival_filter
 unwind treatment_filters as treatment_filter
 unwind treatment_response_filters as treatment_response_filter
-with id, guid, file_name, data_category, file_type, file_description, file_size, md5sum, study_id, study_acronym, study_name, participant_id, sample_id, sample_diagnosis_filter, last_known_survival_status, library_selection,library_source_material, library_source_molecule, library_strategy
+with id, guid, file_name, data_category, file_type, file_description, file_size, file_access, file_mapping_level, md5sum, study_id, study_acronym, study_name, participant_id, sample_id, sample_diagnosis_filter, survival_filter, treatment_filter, treatment_response_filter, library_selection,library_source_material, library_source_molecule, library_strategy
 where sample_diagnosis_filter.age_at_diagnosis >= [''] and sample_diagnosis_filter.age_at_diagnosis <= [''] and sample_diagnosis_filter.diagnosis in [''] and ANY(element IN [''] WHERE element IN sample_diagnosis_filter.diagnosis_anatomic_site) and sample_diagnosis_filter.diagnosis_classification_system in [''] and sample_diagnosis_filter.diagnosis_basis in [''] and sample_diagnosis_filter.disease_phase in ['']
         and sample_diagnosis_filter.participant_age_at_collection >= [''] and sample_diagnosis_filter.participant_age_at_collection <= [''] and ANY(element IN [''] WHERE element IN sample_diagnosis_filter.sample_anatomic_site) and sample_diagnosis_filter.sample_tumor_status in [''] and sample_diagnosis_filter.tumor_classification in ['']
-           and survival_filter.last_known_survival_status in [''] and survival_filter.event_free_survival_status in [''] and survival_filter.first_event in ['']
-      and survival_filter.age_at_last_known_survival_status in [''] and treatment_filter.treatment_type in [''] and treatment_filter.treatment_agent in [''] and treatment_filter.age_at_treatment_start in ['']
-      and treatment_response_filter.response_category in [''] and treatment_response_filter.age_at_response in [''] 
-with id, guid, file_name, data_category, file_type, file_description, file_size, md5sum, study_id, study_acronym, study_name, participant_id, sample_id, last_known_survival_status, library_selection,library_source_material, library_source_molecule, library_strategy
-where ANY(element IN [''] WHERE element IN last_known_survival_status)
-with distinct id, guid, file_name, data_category, file_type, file_description, file_size, md5sum, study_id, study_acronym, study_name, participant_id, sample_id, library_selection, library_source_material, library_source_molecule, library_strategy
+        and survival_filter.last_known_survival_status in [''] and survival_filter.event_free_survival_status in [''] and survival_filter.first_event in ['']
+        and survival_filter.age_at_last_known_survival_status >= [''] and survival_filter.age_at_last_known_survival_status <= ['']
+        and ANY(element IN [''] WHERE element IN treatment_filter.treatment_type) and ANY(element IN [''] WHERE element IN treatment_filter.treatment_agent)
+        and treatment_filter.age_at_treatment_start >= [''] and treatment_filter.age_at_treatment_start <= ['']
+        and treatment_response_filter.response_category in [''] and treatment_response_filter.age_at_response >= [''] and treatment_response_filter.age_at_response <= [''] 
+with distinct id, guid, file_name, data_category, file_type, file_description, file_size, file_access, file_mapping_level, md5sum, study_id, study_acronym, study_name, participant_id, sample_id, library_selection, library_source_material, library_source_molecule, library_strategy
 call {
-  with id, guid, file_name, data_category, file_type, file_description, file_size, md5sum, study_id, study_acronym, study_name, participant_id, sample_id,library_selection,library_source_material, library_source_molecule, library_strategy
-  return id as fid, guid as dig, file_name as fn, data_category as fc, file_type as ft, file_description as fd, file_size as fsize, md5sum as md5, study_id as sid, study_acronym as sa, study_name as sn, participant_id as pid, sample_id as smid,library_selection as ls, library_source_material as lsma, library_source_molecule as lsmo, library_strategy as listr
+  with id, guid, file_name, data_category, file_type, file_description, file_size, file_access, file_mapping_level, md5sum, study_id, study_acronym, study_name, participant_id, sample_id,library_selection,library_source_material, library_source_molecule, library_strategy
+  return id as fid, guid as dig, file_name as fn, data_category as fc, file_type as ft, file_description as fd, file_size as fsize, file_mapping_level as fml, file_access as fa, md5sum as md5, study_id as sid, study_acronym as sa, study_name as sn, participant_id as pid, sample_id as smid,library_selection as ls, library_source_material as lsma, library_source_molecule as lsmo, library_strategy as listr
   UNION ALL
   with study_id
   MATCH (file:clinical_measure_file)
@@ -676,8 +708,10 @@ call {
     file.id as fid,
     file.dcf_indexd_guid AS dig,
     file.file_name AS fn,
-    'Clinical data' AS fc,
+    apoc.text.split(file.data_category, ';') AS fc,
+    file.file_access AS fa,
     file.file_type AS ft,
+    file.file_mapping_level AS fml,
     file.file_description AS fd,
     file.file_size AS fsize,
     file.md5sum AS md5,
@@ -691,24 +725,26 @@ call {
     null AS lsmo,
     null AS listr
 }
-with fid as id, dig as guid, fn as file_name, fc as data_category, ft as file_type, fd as file_description, fsize as file_size, md5 as md5sum, sid as study_id, sa as study_acronym, sn as study_name, pid as participant_id, smid as sample_id,ls as library_selection,lsma as library_source_material, lsmo as library_source_molecule, listr as library_strategy
-where data_category in [''] and file_type in [''] 
+with fid as id, dig as guid, fn as file_name, fc as data_category, ft as file_type, fd as file_description, fsize as file_size, fa as file_access, fml as file_mapping_level, md5 as md5sum, sid as study_id, sa as study_acronym, sn as study_name, pid as participant_id, smid as sample_id,ls as library_selection,lsma as library_source_material, lsmo as library_source_molecule, listr as library_strategy
+where ANY(element IN [''] WHERE element IN data_category) and file_type in [''] and file_mapping_level in ['']
         and study_acronym in [''] and study_name in [''] 
         and library_selection in [''] and library_source_material in [''] and library_source_molecule in [''] and library_strategy in ['']
 with id, guid, file_name, data_category, file_type, file_description, file_size, ['Bytes', 'KB', 'MB', 'GB', 'TB'] AS units,
         toInteger(floor(log(file_size)/log(1024))) as i,
-        2 as precision, md5sum, study_id, study_acronym, study_name, participant_id, sample_id,library_selection,library_source_material, library_source_molecule, library_strategy
+        2 as precision, file_access, file_mapping_level, md5sum, study_id, study_acronym, study_name, participant_id, sample_id,library_selection,library_source_material, library_source_molecule, library_strategy
 with id, guid, file_name, data_category, file_type, file_description, file_size, file_size /(1024^i) AS value,
         10^precision AS factor,
-        units[i] as unit, md5sum, study_id, study_acronym, study_name, participant_id, sample_id, library_selection,library_source_material, library_source_molecule, library_strategy
+        units[i] as unit, file_access, file_mapping_level, md5sum, study_id, study_acronym, study_name, participant_id, sample_id, library_selection,library_source_material, library_source_molecule, library_strategy
 with id, guid, file_name, data_category, file_type, file_description, unit,
-        round(factor * value)/factor AS size, md5sum, study_id, study_acronym, study_name, participant_id, sample_id, library_selection, library_source_material, library_source_molecule, library_strategy     
+        round(factor * value)/factor AS size, file_access, file_mapping_level, md5sum, study_id, study_acronym, study_name, participant_id, sample_id, library_selection, library_source_material, library_source_molecule, library_strategy     
 with DISTINCT id,
         file_name,
         data_category,
         file_description,
         file_type,
         CASE size % 1 WHEN 0 THEN apoc.convert.toInteger(size)+' ' +unit ELSE size+' ' +unit END AS file_size_new,
+        file_access,
+        file_mapping_level,
         study_id,
         participant_id,
         sample_id,
@@ -724,6 +760,7 @@ data_category As `Data Category`,
 file_description As `File Description`,
 file_type As `File Type`,
 file_size_new As `File Size`,
+file_access As `File Access`,
 study_id As `Study ID`,
 coalesce(participant_id, '') As `Participant ID`,
 coalesce(sample_id, '') As `Sample ID`,
@@ -732,5 +769,6 @@ md5sum As `MD5Sum`,
 coalesce(library_selection, '') As `Library Selection`,
 coalesce(library_source_material, '') As `Library Source Material`,
 coalesce(library_strategy, '') As `Library Strategy`,
-coalesce(library_source_molecule, '') As `Library Source Molecule `
+coalesce(library_source_molecule, '') As `Library Source Molecule `,
+file_mapping_level As `File Mapping`
 ORDER BY file_name LIMIT 100

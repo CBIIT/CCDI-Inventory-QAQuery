@@ -48,6 +48,7 @@ call {
   WITH sm, opensearch_data, COLLECT(DISTINCT {
     data_category: apoc.text.split(file.data_category, ';'),
     file_type: file.file_type,
+    file_mapping_level: file.file_mapping_level,
     library_selection: file.library_selection,
     library_source_material: file.library_source_material,
     library_source_molecule: file.library_source_molecule,
@@ -57,6 +58,7 @@ call {
   WITH sm, opensearch_data, apoc.coll.union(file_filter, COLLECT(DISTINCT {
     data_category: apoc.text.split(file.data_category, ';'),
     file_type: file.file_type,
+    file_mapping_level: file.file_mapping_level,
     library_selection: null,
     library_source_material: null,
     library_source_molecule: null,
@@ -66,6 +68,7 @@ call {
   WITH sm, opensearch_data, apoc.coll.union(file_filter, COLLECT(DISTINCT {
     data_category: apoc.text.split(file.data_category, ';'),
     file_type: file.file_type,
+    file_mapping_level: file.file_mapping_level,
     library_selection: null,
     library_source_material: null,
     library_source_molecule: null,
@@ -75,6 +78,7 @@ call {
   WITH sm, opensearch_data, apoc.coll.union(file_filter, COLLECT(DISTINCT {
     data_category: apoc.text.split(file.data_category, ';'),
     file_type: file.file_type,
+    file_mapping_level: file.file_mapping_level,
     library_selection: null,
     library_source_material: null,
     library_source_molecule: null,
@@ -91,21 +95,25 @@ call {
     study_name: st.study_name
   }) AS opensearch_data
   OPTIONAL MATCH (sm)-[*..3]->(:participant)<-[:of_survival]-(su:survival)
-  OPTIONAL MATCH (sm)-[*..3]->(:participant)<-[:of_treatment]-(tm:treatment)
-  OPTIONAL MATCH (sm)-[*..3]->(:participant)<-[:of_treatment_response]-(tr:treatment_response)
   WITH sm, opensearch_data, COLLECT(DISTINCT {last_known_survival_status: su.last_known_survival_status, 
-              event_free_survival_status: su.event_free_survival_status, 
-              first_event: su.first_event,
-              age_at_last_known_survival_status: su.age_at_last_known_survival_status} ) AS survival_filters,
-            COLLECT(DISTINCT{treatment_type: tm.treatment_type,
-            treatment_agent: tm.treatment_agent,
-            age_at_treatment_start: tm.age_at_treatment_start}) as treatment_filters,
-            COLLECT(DISTINCT{response_category: tr.response_category,
-            age_at_response: tr.age_at_response}) as treatment_response_filters
+      event_free_survival_status: su.event_free_survival_status, 
+      first_event: su.first_event,
+      age_at_last_known_survival_status: su.age_at_last_known_survival_status} ) AS survival_filters
   WITH sm, apoc.map.merge(opensearch_data, {
-    survival_filters: survival_filters,
-    treatment_filters: treatment_filters,
-    treatment_response_filters:treatment_response_filters
+    survival_filters: survival_filters
+  }) AS opensearch_data
+  OPTIONAL MATCH (sm)-[*..3]->(:participant)<-[:of_treatment]-(tm:treatment)
+  WITH sm, opensearch_data, COLLECT(DISTINCT{treatment_type: apoc.text.split(tm.treatment_type, ';'),
+    treatment_agent: apoc.text.split(tm.treatment_agent, ';'),
+    age_at_treatment_start: tm.age_at_treatment_start}) as treatment_filters
+  WITH sm, apoc.map.merge(opensearch_data, {
+    treatment_filters: treatment_filters
+  }) AS opensearch_data
+  OPTIONAL MATCH (sm)-[*..3]->(:participant)<-[:of_treatment_response]-(tr:treatment_response)
+  WITH sm, opensearch_data, COLLECT(DISTINCT{response_category: tr.response_category,
+    age_at_response: tr.age_at_response}) as treatment_response_filters
+  WITH sm, apoc.map.merge(opensearch_data, {
+    treatment_response_filters: treatment_response_filters
   }) AS opensearch_data
   with opensearch_data
   RETURN DISTINCT
@@ -125,10 +133,10 @@ call {
     opensearch_data.study_acronym as study_acronym,
     opensearch_data.study_name as study_name,
     opensearch_data.diagnosis_filters AS diagnosis_filters,
-    opensearch_data.survival_filters as survival_filters,
     opensearch_data.treatment_filters as treatment_filters,
     opensearch_data.survival_filters as survival_filters,
-    opensearch_data.treatment_response_filters AS treatment_response_filters
+    opensearch_data.treatment_response_filters AS treatment_response_filters,
+    opensearch_data.file_filters AS file_filters
   union all
     with st
     MATCH (sm:sample)
@@ -166,14 +174,14 @@ call {
           tumor_stage_source: dg.tumor_stage_source,
           diagnosis: dg.diagnosis
       }) AS diagnosis_filters,
-    null as survival_filters,
-    null as treatment_filters,
-    null as treatment_response_filters,
-
+      null AS survival_filters,
+      null as treatment_filters,
+      null as treatment_response_filters,
       CASE COLLECT(file) WHEN [] THEN []
                 ELSE COLLECT(DISTINCT {
                     data_category: apoc.text.split(file.data_category, ';'),
                     file_type: file.file_type,
+                    file_mapping_level: file.file_mapping_level,
                     library_selection: CASE LABELS(file)[0]
                                   WHEN 'sequencing_file' THEN file.library_selection
                                   ELSE null END,
@@ -201,13 +209,15 @@ unwind treatment_filters as treatment_filter
 unwind treatment_response_filters as treatment_response_filter
 with id, sample_id, participant_id, study_id, sex_at_birth, race, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, survival_filter, treatment_filter, treatment_response_filter, file_filters, dbgap_accession
 where survival_filter.last_known_survival_status in [''] and survival_filter.event_free_survival_status in [''] and survival_filter.first_event in ['']
-      and survival_filter.age_at_last_known_survival_status in [''] and treatment_filter.treatment_type in [''] and treatment_filter.treatment_agent in [''] and treatment_filter.age_at_treatment_start in ['']
-      and treatment_response_filter.response_category in [''] and treatment_response_filter.age_at_response in [''] 
+        and survival_filter.age_at_last_known_survival_status >= [''] and survival_filter.age_at_last_known_survival_status <= ['']
+        and ANY(element IN [''] WHERE element IN treatment_filter.treatment_type) and ANY(element IN [''] WHERE element IN treatment_filter.treatment_agent)
+        and treatment_filter.age_at_treatment_start >= [''] and treatment_filter.age_at_treatment_start <= ['']
+        and treatment_response_filter.response_category in [''] and treatment_response_filter.age_at_response >= [''] and treatment_response_filter.age_at_response <= [''] 
 with id, sample_id, participant_id, study_id, sex_at_birth, race, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, file_filters, dbgap_accession
 where participant_age_at_collection >= [''] and participant_age_at_collection <= [''] and ANY(element IN [''] WHERE element IN sample_anatomic_site) and sample_tumor_status in [''] and tumor_classification in ['']
 unwind file_filters as file_filter
 with id, sample_id, participant_id, study_id, sex_at_birth, race, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, file_filter, dbgap_accession
-where file_filter.data_category in [''] and file_filter.file_type in [''] 
+where ANY(element IN [''] WHERE element IN file_filter.data_category) and file_filter.file_type in [''] and file_filter.file_mapping_level in ['']
       and file_filter.library_selection in [''] and file_filter.library_source_material in [''] and file_filter.library_source_molecule in [''] and file_filter.library_strategy in ['']
 with distinct id, sample_id, participant_id, study_id, sex_at_birth, race, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, dbgap_accession
 RETURN DISTINCT

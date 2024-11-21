@@ -11,6 +11,7 @@ with p, collect(DISTINCT {
             tumor_classification: sm.tumor_classification,
             data_category: apoc.text.split(file.data_category, ';'),
             file_type: file.file_type,
+            file_mapping_level: file.file_mapping_level,
             library_source_material: null,
             library_source_molecule: null,
             library_strategy: null
@@ -24,6 +25,7 @@ with p, sample_clinical_radiology_file_filter, collect(DISTINCT {
             tumor_classification: sm.tumor_classification,
             data_category: apoc.text.split(file.data_category, ';'),
             file_type: file.file_type,
+            file_mapping_level: file.file_mapping_level,
             library_selection: CASE LABELS(file)[0]
                           WHEN 'sequencing_file' THEN file.library_selection
                           ELSE null END,
@@ -69,6 +71,7 @@ with p, sample_clinical_radiology_file_filter, collect(DISTINCT {
           diagnosis: dg.diagnosis,
           data_category: apoc.text.split(file.data_category, ';'),
           file_type: file.file_type,
+          file_mapping_level: file.file_mapping_level,
           library_selection: CASE LABELS(file)[0]
                     WHEN 'sequencing_file' THEN file.library_selection
                     ELSE null END,
@@ -101,6 +104,7 @@ with p, sample_clinical_radiology_file_filter, collect(DISTINCT {
           diagnosis: dg.diagnosis,
           data_category: apoc.text.split(file.data_category, ';'),
           file_type: file.file_type,
+          file_mapping_level: file.file_mapping_level,
           library_selection: null,
           library_source_material: null,
           library_source_molecule: null,
@@ -127,6 +131,7 @@ with p, sample_diagnosis_file_filter, COLLECT(DISTINCT {
           diagnosis: dg.diagnosis,
           data_category: apoc.text.split(file.data_category, ';'),
           file_type: file.file_type,
+          file_mapping_level: file.file_mapping_level,
           library_selection: CASE LABELS(file)[0]
                     WHEN 'sequencing_file' THEN file.library_selection
                     ELSE null END,
@@ -161,6 +166,7 @@ with p, sample_diagnosis_file_filters, COLLECT(DISTINCT {
           diagnosis: dg.diagnosis,
           data_category: apoc.text.split(file.data_category, ';'),
           file_type: file.file_type,
+          file_mapping_level: file.file_mapping_level,
           library_selection: CASE LABELS(file)[0]
                     WHEN 'sequencing_file' THEN file.library_selection
                     ELSE null END,
@@ -195,6 +201,7 @@ with p, sample_diagnosis_file_filter, COLLECT(DISTINCT {
           diagnosis: dg.diagnosis,
           data_category: apoc.text.split(file.data_category, ';'),
           file_type: file.file_type,
+          file_mapping_level: file.file_mapping_level,
           library_selection: null,
           library_source_material: null,
           library_source_molecule: null,
@@ -221,6 +228,7 @@ with p, sample_diagnosis_file_filters, COLLECT(DISTINCT {
           diagnosis: dg.diagnosis,
           data_category: apoc.text.split(file.data_category, ';'),
           file_type: file.file_type,
+          file_mapping_level: file.file_mapping_level,
           library_selection: null,
           library_source_material: null,
           library_source_molecule: null,
@@ -240,8 +248,8 @@ with p, sample_diagnosis_file_filters, COLLECT(DISTINCT {
               event_free_survival_status: su.event_free_survival_status, 
               first_event: su.first_event,
               age_at_last_known_survival_status: su.age_at_last_known_survival_status} ) AS survival_filters,
-            COLLECT(DISTINCT{treatment_type: tm.treatment_type,
-            treatment_agent: tm.treatment_agent,
+            COLLECT(DISTINCT{treatment_type: apoc.text.split(tm.treatment_type, ';'),
+            treatment_agent: apoc.text.split(tm.treatment_agent, ';'),
             age_at_treatment_start: tm.age_at_treatment_start}) as treatment_filters,
             COLLECT(DISTINCT{response_category: tr.response_category,
             age_at_response: tr.age_at_response}) as treatment_response_filters , file, st, stf, stp
@@ -261,23 +269,23 @@ with p, sample_diagnosis_file_filters, COLLECT(DISTINCT {
     st.study_acronym as study_acronym,
     st.study_name as study_name
   where study_acronym in [''] and study_name in ['']
-  with id, participant_id, dbgap_accession, sex_at_birth, race_str, race, alternate_participant_id, sample_diagnosis_file_filters, , survival_filters, treatment_filters, treatment_response_filters
+  with id, participant_id, dbgap_accession, sex_at_birth, race_str, race, alternate_participant_id, sample_diagnosis_file_filters, survival_filters, treatment_filters, treatment_response_filters
   where participant_id in [''] and sex_at_birth in [''] and ANY(element IN [''] WHERE element IN race)
   unwind sample_diagnosis_file_filters as sample_diagnosis_file_filter
   unwind survival_filters as survival_filter
   unwind treatment_filters as treatment_filter
   unwind treatment_response_filters as treatment_response_filter
-  with id, participant_id, dbgap_accession, sex_at_birth, race_str, alternate_participant_id, sample_diagnosis_file_filter, , survival_filter, treatment_filter, treatment_response_filter
+  with id, participant_id, dbgap_accession, sex_at_birth, race_str, alternate_participant_id, sample_diagnosis_file_filter, survival_filter, treatment_filter, treatment_response_filter
   where sample_diagnosis_file_filter.age_at_diagnosis >= [''] and sample_diagnosis_file_filter.age_at_diagnosis <= [''] and sample_diagnosis_file_filter.diagnosis in [''] and ANY(element IN [''] WHERE element IN sample_diagnosis_file_filter.diagnosis_anatomic_site) and sample_diagnosis_file_filter.diagnosis_classification_system in [''] and sample_diagnosis_file_filter.diagnosis_basis in [''] and sample_diagnosis_file_filter.disease_phase in [''] 
         and sample_diagnosis_file_filter.participant_age_at_collection >= [''] and sample_diagnosis_file_filter.participant_age_at_collection <= [''] and ANY(element IN [''] WHERE element IN sample_diagnosis_file_filter.sample_anatomic_site) and sample_diagnosis_file_filter.sample_tumor_status in [''] and sample_diagnosis_file_filter.tumor_classification in [''] 
-        and sample_diagnosis_file_filter.data_category in [''] and sample_diagnosis_file_filter.file_type in [''] 
+        and ANY(element IN [''] WHERE element IN sample_file_filter.data_category) and sample_diagnosis_file_filter.file_type in [''] and sample_diagnosis_file_filter.file_mapping_level in ['']
         and sample_diagnosis_file_filter.library_selection in [''] and sample_diagnosis_file_filter.library_source_material in [''] and sample_diagnosis_file_filter.library_source_molecule in [''] and sample_diagnosis_file_filter.library_strategy in ['']
-           and survival_filter.last_known_survival_status in [''] and survival_filter.event_free_survival_status in [''] and survival_filter.first_event in ['']
-      and survival_filter.age_at_last_known_survival_status in [''] and treatment_filter.treatment_type in [''] and treatment_filter.treatment_agent in [''] and treatment_filter.age_at_treatment_start in ['']
-      and treatment_response_filter.response_category in [''] and treatment_response_filter.age_at_response in [''] 
-  with id, participant_id, dbgap_accession, sex_at_birth, race_str, alternate_participant_id, last_known_survival_status
-  where ANY(element IN [''] WHERE element IN last_known_survival_status)
-  with distinct id, participant_id, dbgap_accession, sex_at_birth, race_str, alternate_participant_id
+        and survival_filter.last_known_survival_status in [''] and survival_filter.event_free_survival_status in [''] and survival_filter.first_event in ['']
+        and survival_filter.age_at_last_known_survival_status >= [''] and survival_filter.age_at_last_known_survival_status <= ['']
+        and ANY(element IN [''] WHERE element IN treatment_filter.treatment_type) and ANY(element IN [''] WHERE element IN treatment_filter.treatment_agent)
+        and treatment_filter.age_at_treatment_start >= [''] and treatment_filter.age_at_treatment_start <= ['']
+        and treatment_response_filter.response_category in [''] and treatment_response_filter.age_at_response >= [''] and treatment_response_filter.age_at_response <= [''] 
+with distinct id, participant_id, dbgap_accession, sex_at_birth, race_str, alternate_participant_id
   return
   coalesce(participant_id, '') AS `Participant ID`,
   coalesce(dbgap_accession, '') AS `Study ID`,
