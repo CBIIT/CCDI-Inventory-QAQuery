@@ -34,10 +34,17 @@ with st, sm, apoc.text.split(sm.anatomic_site, ';') as sample_anatomic_site
 where sm.participant_age_at_collection >= [''] and sm.participant_age_at_collection <= [''] and ANY(element IN [''] WHERE element IN sample_anatomic_site) and sm.sample_tumor_status in [''] and sm.tumor_classification in [''] 
 with distinct st
 optional match (st)<--(p:participant)<--(su:survival)
-with st, p, COLLECT(DISTINCT su.last_known_survival_status) as vital_status
-with st, p, case when 'Dead' in vital_status then ['Dead']
-          else vital_status end as last_known_survival_status
-where ANY(element IN [''] WHERE element IN last_known_survival_status) 
+optional match (st)<--(p:participant)<--(tm:treatment)
+optional match (st)<--(p:participant)<--(tr:treatment_response)
+with st, p, COLLECT(DISTINCT {last_known_survival_status: su.last_known_survival_status, 
+              event_free_survival_status: su.event_free_survival_status, 
+              first_event: su.first_event,
+              age_at_last_known_survival_status: su.age_at_last_known_survival_status} ) AS survival_filters,
+            COLLECT(DISTINCT{treatment_type: tm.treatment_type,
+            treatment_agent: tm.treatment_agent,
+            age_at_treatment_start: tm.age_at_treatment_start}) as treatment_filters,
+            COLLECT(DISTINCT{response_category: tr.response_category,
+            age_at_response: tr.age_at_response}) as treatment_response_filters 
 with distinct st
 MATCH (st)<-[:of_participant]-(p:participant)
 with st, count(p) as num_p
