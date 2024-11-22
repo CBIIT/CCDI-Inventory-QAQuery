@@ -2,15 +2,10 @@ Match (st:study)
 where st.dbgap_accession in ['']
 optional match (st)<-[*..6]-(file)
 where (file:clinical_measure_file or file:radiology_file or file:sequencing_file or file:pathology_file or file:methylation_array_file or file:cytogenomic_file)
-with st, CASE LABELS(file)[0]
-                    WHEN 'clinical_measure_file' THEN 'Clinical data'
-                    WHEN 'radiology_file' THEN 'Radiology imaging'
-                    WHEN 'sequencing_file' THEN 'Sequencing'
-                    WHEN 'cytogenomic_file' THEN 'Cytogenomic'
-                    WHEN 'pathology_file' THEN 'Pathology imaging'
-                    WHEN 'methylation_array_file' THEN 'Methylation array'
-                    ELSE null END as file_c,
+with st, file,
+        apoc.text.split(file.data_category, ';') as file_c,
         file.file_type as file_t,
+        file.file_mapping_level as file_ml,
         CASE LABELS(file)[0]
                         WHEN 'sequencing_file' THEN file.library_selection
                         ELSE null END as library_s,
@@ -23,10 +18,10 @@ with st, CASE LABELS(file)[0]
         CASE LABELS(file)[0]
                         WHEN 'sequencing_file' THEN file.library_strategy
                         ELSE null END as library_str
-with st, collect(distinct file_c) as assay_method, collect(distinct file_t) as file_type, collect(distinct library_s) as library_selection, collect(distinct library_source_mat) as library_source_material, collect(distinct library_source_mol) as library_source_molecule, collect(distinct library_str) as library_strategy
+with st, apoc.coll.flatten(collect(distinct file_c)) as data_category, collect(distinct file_t) as file_type, collect(distinct file_ml) as file_mapping_level, collect(distinct library_s) as library_selection, collect(distinct library_source_mat) as library_source_material, collect(distinct library_source_mol) as library_source_molecule, collect(distinct library_str) as library_strategy
 where st.study_acronym in [''] and st.study_name in [''] 
-        and assay_method in [''] and file_type in [''] 
-        and library_selection in ['']  and library_source_material in [''] and library_source_molecule in [''] and library_strategy in ['']
+        and ANY(element IN [''] WHERE element IN data_category) and ANY(element IN [''] WHERE element IN file_type) and ANY(element IN [''] WHERE element IN file_mapping_level)
+        and ANY(element IN [''] WHERE element IN library_selection) and ANY(element IN [''] WHERE element IN library_source_material) and ANY(element IN [''] WHERE element IN library_source_molecule) and ANY(element IN [''] WHERE element IN library_strategy)
 with distinct st
 optional match (st)<--(p:participant)
 with st, p, apoc.text.split(p.race, ',') as race
@@ -41,10 +36,15 @@ with st, sm, apoc.text.split(sm.anatomic_site, ';') as sample_anatomic_site
 where sm.participant_age_at_collection >= [''] and sm.participant_age_at_collection <= [''] and ANY(element IN [''] WHERE element IN sample_anatomic_site) and sm.sample_tumor_status in [''] and sm.tumor_classification in [''] 
 with distinct st
 optional match (st)<--(p:participant)<--(su:survival)
-with st, p, COLLECT(DISTINCT su.last_known_survival_status) as vital_status
-with st, p, case when 'Dead' in vital_status then ['Dead']
-          else vital_status end as last_known_survival_status
-where ANY(element IN [''] WHERE element IN last_known_survival_status) 
+where su.last_known_survival_status in [''] and su.event_free_survival_status in ['']
+        and su.first_event in [''] and su.age_at_last_known_survival_status >= [''] and su.age_at_last_known_survival_status <= ['']
+with distinct st
+optional match (st)<--(p:participant)<--(tm:treatment)
+with st, p, tm.age_at_treatment_start as age_at_treatment_start, apoc.text.split(tm.treatment_type, ';') as treatment_type, apoc.text.split(tm.treatment_agent, ';') as treatment_agent
+where ANY(element IN [''] WHERE element IN treatment_type) and ANY(element IN [''] WHERE element IN treatment_agent) and age_at_treatment_start >= [''] and age_at_treatment_start <= ['']
+with distinct st
+optional match (st)<--(p:participant)<--(tr:treatment_response)
+where trf.response_category in [''] and trf.age_at_response >= [''] and trf.age_at_response <= ['']
 with distinct st
 MATCH (st)<-[:of_participant]-(p:participant)
 with st, count(p) as num_p
