@@ -54,6 +54,16 @@ call {
     library_source_molecule: file.library_source_molecule,
     library_strategy: file.library_strategy
   }) AS file_filter
+  OPTIONAL MATCH (sm)<-[*..3]-(file:generic_file)
+  WITH sm, opensearch_data, apoc.coll.union(file_filter, COLLECT(DISTINCT {
+    data_category: apoc.text.split(file.data_category, ';'),
+    file_type: file.file_type,
+    file_mapping_level: file.file_mapping_level,
+    library_selection: null,
+    library_source_material: null,
+    library_source_molecule: null,
+    library_strategy: null
+  })) AS file_filter
   OPTIONAL MATCH (sm)<-[*..3]-(file:pathology_file)
   WITH sm, opensearch_data, apoc.coll.union(file_filter, COLLECT(DISTINCT {
     data_category: apoc.text.split(file.data_category, ';'),
@@ -143,7 +153,7 @@ call {
     MATCH (st)<-[:of_cell_line|of_pdx]-(cl)<--(sm)
     Where (cl:cell_line or cl:pdx)
     optional Match (sm)<--(file)
-    WHERE (file: sequencing_file OR file:pathology_file OR file:methylation_array_file OR file:cytogenomic_file)
+    WHERE (file: sequencing_file or file: generic_file OR file:pathology_file OR file:methylation_array_file OR file:cytogenomic_file)
     OPTIONAL MATCH (sm)<-[:of_diagnosis]-(dg:diagnosis)
     OPTIONAL MATCH (st)<-[:of_study_personnel]-(stp:study_personnel)
     OPTIONAL MATCH (st)<-[:of_study_funding]-(stf:study_funding)

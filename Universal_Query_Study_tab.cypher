@@ -1,7 +1,7 @@
 Match (st:study)
 where st.dbgap_accession in ['']
 optional match (st)<-[*..6]-(file)
-where (file:clinical_measure_file or file:radiology_file or file:sequencing_file or file:pathology_file or file:methylation_array_file or file:cytogenomic_file)
+where (file:clinical_measure_file or file:generic_file or file:radiology_file or file:sequencing_file or file:pathology_file or file:methylation_array_file or file:cytogenomic_file)
 with st, file,
         apoc.text.split(file.data_category, ';') as file_c,
         file.file_type as file_t,
@@ -60,7 +60,7 @@ with st, num_p, cancers, dg_site, count(dg_site) as num_sites
 ORDER BY num_sites desc
 with st, num_p, cancers, collect(dg_site + ' (' + toString(num_sites) + ')') as sites
 MATCH (st)<-[*..5]-(fl)
-WHERE (fl:clinical_measure_file OR fl: sequencing_file OR fl:pathology_file OR fl:radiology_file OR fl:methylation_array_file OR fl:cytogenomic_file)
+WHERE (fl:clinical_measure_file or fl:generic_file OR fl: sequencing_file OR fl:pathology_file OR fl:radiology_file OR fl:methylation_array_file OR fl:cytogenomic_file)
 with st, num_p, cancers, sites, fl.file_type as ft, count(fl.file_type) as num_ft
 ORDER BY num_ft desc
 with st, num_p, cancers, sites, collect(ft + ' (' + toString(num_ft) + ')') as file_types, sum(num_ft) as num_files
@@ -72,7 +72,7 @@ WHERE (cp:cell_line or cp:pdx)
 WITH st, num_p, cancers, sites, file_types, num_files, num_samples_1, count(distinct sm2.sample_id) as num_samples_2
 WITH st, num_p, cancers, sites, file_types, num_files, num_samples_1 + num_samples_2 as num_samples
 MATCH (st)<-[*..5]-(file)
-WHERE (file:clinical_measure_file OR file: sequencing_file OR file:pathology_file OR file:radiology_file OR file:methylation_array_file OR file:cytogenomic_file)
+WHERE (file:clinical_measure_file or file:generic_file OR file: sequencing_file OR file:pathology_file OR file:radiology_file OR file:methylation_array_file OR file:cytogenomic_file)
 OPTIONAL MATCH (st)<-[:of_publication]-(pub:publication)
 OPTIONAL MATCH (st)<-[:of_study_personnel]-(stp:study_personnel)
 WHERE stp.personnel_type = 'PI'

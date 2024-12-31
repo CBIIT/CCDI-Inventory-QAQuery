@@ -4,7 +4,7 @@ with st
 Call {
     with st
     MATCH (file)
-    where (file:clinical_measure_file or file:radiology_file)
+    where (file:clinical_measure_file or file: generic_file or file:radiology_file)
     MATCH (st)<--(p:participant)<--(file)
     optional MATCH (p)<-[*0..3]-(sm:sample)
     OPTIONAL MATCH (p)<-[:of_diagnosis]-(dg:diagnosis)
@@ -111,6 +111,7 @@ Call {
     p.id as pid,
     CASE LABELS(file)[0]
             WHEN 'clinical_measure_file' THEN file.clinical_measure_file_id
+            WHEN 'generic_file' THEN file.generic_file_id
             WHEN 'radiology_file' THEN file.radiology_file_id
             ELSE null END AS file_id,
     file.dcf_indexd_guid AS guid,
@@ -143,7 +144,7 @@ Call {
     union all
     with st
     MATCH (file)
-    where (file: sequencing_file OR file:pathology_file OR file:methylation_array_file OR file:cytogenomic_file)
+    where (file: sequencing_file or file: generic_file OR file:pathology_file OR file:methylation_array_file OR file:cytogenomic_file)
     MATCH (st)<--(p:participant)<-[*..3]-(sm:sample)<--(file)
     where p.participant_id in [''] and p.sex_at_birth in [''] and ANY(element IN [''] WHERE element IN apoc.text.split(p.race, ';')) 
             and sm.participant_age_at_collection >= [''] and sm.participant_age_at_collection <= [''] and ANY(element IN [''] WHERE element IN apoc.text.split(sm.anatomic_site, ';')) and sm.sample_tumor_status in [''] and sm.tumor_classification in ['']
@@ -262,6 +263,7 @@ Call {
     p.id as pid,
     CASE LABELS(file)[0]
             WHEN 'sequencing_file' THEN file.sequencing_file_id
+            WHEN 'generic_file' THEN file.generic_file_id
             WHEN 'cytogenomic_file' THEN file.cytogenomic_file_id
             WHEN 'pathology_file' THEN file.pathology_file_id
             WHEN 'methylation_array_file' THEN file.methylation_array_file_id ELSE null END AS file_id,
@@ -300,7 +302,7 @@ Call {
     union all
     with st
     MATCH (file)
-    WHERE (file:sequencing_file OR file:pathology_file OR file:methylation_array_file OR file:cytogenomic_file)
+    WHERE (file:sequencing_file or file:generic_file OR file:pathology_file OR file:methylation_array_file OR file:cytogenomic_file)
     MATCH (st)<-[:of_cell_line|of_pdx]-(cl)<--(sm:sample)
     Where (cl: cell_line or cl: pdx)
     MATCH (sm)<--(file)
@@ -314,6 +316,7 @@ Call {
     null as pid,
     CASE LABELS(file)[0]
             WHEN 'sequencing_file' THEN file.sequencing_file_id
+            WHEN 'generic_file' THEN file.generic_file_id
             WHEN 'cytogenomic_file' THEN file.cytogenomic_file_id
             WHEN 'pathology_file' THEN file.pathology_file_id
             WHEN 'methylation_array_file' THEN file.methylation_array_file_id ELSE null END AS file_id,
@@ -363,7 +366,7 @@ Call {
     union all
     with st
     MATCH (st)<--(p:participant)<--(sm1:sample)<-[*2..2]-(sm:sample)
-    where not ((sm)<--(:sequencing_file)) and not ((sm)<--(:cytogenomic_file)) and not ((sm)<--(:pathology_file)) and not ((sm)<--(:methylation_array_file)) and not ((p)<--(:radiology_file)) and not ((p)<--(:clinical_measure_file))
+    where not ((sm)<--(:sequencing_file)) and not ((sm)<--(:generic_file)) and not ((sm)<--(:cytogenomic_file)) and not ((sm)<--(:pathology_file)) and not ((sm)<--(:methylation_array_file)) and not ((p)<--(:radiology_file)) and not ((p)<--(:clinical_measure_file) and not ((p)<--(:generic_file))
     OPTIONAL MATCH (p)<-[:of_diagnosis]-(dg:diagnosis)
     with p, sm1, sm, apoc.coll.union(COLLECT(DISTINCT {
                         sample_anatomic_site: apoc.text.split(sm1.anatomic_site, ';'),
@@ -393,7 +396,7 @@ Call {
                         diagnosis: dg.diagnosis
                     })) as sample_diagnosis_filter_1
     MATCH (st:study)<--(p)<--(sm1)<-[*2..2]-(sm)
-    where not ((sm)<--(:sequencing_file)) and not ((sm)<--(:cytogenomic_file)) and not ((sm)<--(:pathology_file)) and not ((sm)<--(:methylation_array_file)) and not ((p)<--(:radiology_file)) and not ((p)<--(:clinical_measure_file))
+    where not ((sm)<--(:sequencing_file)) and not ((sm)<--(:generic_file)) and not ((sm)<--(:cytogenomic_file)) and not ((sm)<--(:pathology_file)) and not ((sm)<--(:methylation_array_file)) and not ((p)<--(:radiology_file)) and not ((p)<--(:clinical_measure_file) and not ((p)<--(:generic_file))
     OPTIONAL MATCH (sm1)<--(dg:diagnosis)
     with p, sm1, sm, sample_diagnosis_filter_1, apoc.coll.union(COLLECT(DISTINCT {
                         sample_anatomic_site: apoc.text.split(sm1.anatomic_site, ';'),
@@ -424,7 +427,7 @@ Call {
                     })) AS sample_diagnosis_filter_2
     with p, sm1, sm, apoc.coll.union(sample_diagnosis_filter_1, sample_diagnosis_filter_2) as sample_diagnosis_filter_3
     MATCH (st:study)<--(p)<--(sm1)<-[*2..2]-(sm)
-    where not ((sm)<--(:sequencing_file)) and not ((sm)<--(:cytogenomic_file)) and not ((sm)<--(:pathology_file)) and not ((sm)<--(:methylation_array_file)) and not ((p)<--(:radiology_file)) and not ((p)<--(:clinical_measure_file))
+    where not ((sm)<--(:sequencing_file)) and not ((sm)<--(:generic_file)) and not ((sm)<--(:cytogenomic_file)) and not ((sm)<--(:pathology_file)) and not ((sm)<--(:methylation_array_file)) and not ((p)<--(:radiology_file)) and not ((p)<--(:clinical_measure_file) and not ((p)<--(:generic_file))
     OPTIONAL MATCH (sm)<--(dg:diagnosis)
     with p, sm1, sm, sample_diagnosis_filter_3, apoc.coll.union(COLLECT(DISTINCT {
                         sample_anatomic_site: apoc.text.split(sm1.anatomic_site, ';'),
@@ -503,7 +506,7 @@ Call {
     union all
     with st
     MATCH (st)<--(p:participant)<--(sm:sample)
-    where not ((sm)<-[*..3]-(:sequencing_file)) and not ((sm)<-[*..3]-(:cytogenomic_file)) and not ((sm)<-[*..3]-(:pathology_file)) and not ((sm)<-[*..3]-(:methylation_array_file)) and not ((p)<--(:radiology_file)) and not ((p)<--(:clinical_measure_file))
+    where not ((sm)<-[*..3]-(:sequencing_file)) and not ((sm)<-[*..3]-(:generic_file)) and not ((sm)<-[*..3]-(:cytogenomic_file)) and not ((sm)<-[*..3]-(:pathology_file)) and not ((sm)<-[*..3]-(:methylation_array_file)) and not ((p)<--(:radiology_file)) and not ((p)<--(:clinical_measure_file) and not ((p)<--(:generic_file))
     OPTIONAL MATCH (p)<-[*..2]-(dg:diagnosis)
     OPTIONAL MATCH (p)<-[:of_survival]-(su:survival)
     OPTIONAL MATCH (p)<-[:of_treatment]-(tm:treatment)
@@ -566,7 +569,7 @@ Call {
     union all
     with st
     MATCH (st)<--(cl)<--(sm:sample)
-    Where (cl: cell_line or cl: pdx) and not ((sm)<--(:sequencing_file)) and not ((sm)<--(:cytogenomic_file)) and not ((sm)<--(:pathology_file)) and not ((sm)<--(:methylation_array_file))
+    Where (cl: cell_line or cl: pdx) and not ((sm)<--(:sequencing_file)) and not ((sm)<--(:generic_file)) and not ((sm)<--(:cytogenomic_file)) and not ((sm)<--(:pathology_file)) and not ((sm)<--(:methylation_array_file))
     optional match (sm)<--(dg:diagnosis)
     OPTIONAL MATCH (st)<-[:of_study_personnel]-(stp:study_personnel)
     OPTIONAL MATCH (st)<-[:of_study_funding]-(stf:study_funding)
@@ -615,7 +618,7 @@ Call {
     union all
     with st
     MATCH (st)<--(p:participant)
-    where not ((p)<--(:sample)) and not ((p)<--(:radiology_file)) and not ((p)<--(:clinical_measure_file))
+    where not ((p)<--(:sample)) and not ((p)<--(:radiology_file)) and not ((p)<--(:clinical_measure_file) and not ((p)<--(:generic_file))
     OPTIONAL MATCH (p)<-[:of_diagnosis]-(dg:diagnosis)
     OPTIONAL MATCH (p)<-[:of_survival]-(su:survival)
     OPTIONAL MATCH (p)<-[:of_treatment]-(tm:treatment)
@@ -700,6 +703,35 @@ call {
   with study_id
   MATCH (file:clinical_measure_file)
   MATCH (stu:study)<-[:of_clinical_measure_file]-(file)
+  where stu.study_id = study_id
+  OPTIONAL MATCH (stu)<-[:of_study_personnel]-(stp:study_personnel)
+  OPTIONAL MATCH (stu)<-[:of_study_funding]-(stf:study_funding)
+  With file, stu, stf, stp
+  RETURN DISTINCT
+    file.id as fid,
+    file.dcf_indexd_guid AS dig,
+    file.file_name AS fn,
+    apoc.text.split(file.data_category, ';') AS fc,
+    file.file_access AS fa,
+    file.file_type AS ft,
+    file.file_mapping_level AS fml,
+    file.file_description AS fd,
+    file.file_size AS fsize,
+    file.md5sum AS md5,
+    stu.study_id AS sid,
+    stu.study_acronym as sa,
+    stu.study_name as sn,
+    null AS p_id,
+    null AS u_p_id,
+    null AS smid,
+    null AS ls,
+    null AS lsma,
+    null AS lsmo,
+    null AS listr
+  UNION ALL
+  with study_id
+  MATCH (file:generic_file)
+  MATCH (stu:study)<-[:of_generic_file]-(file)
   where stu.study_id = study_id
   OPTIONAL MATCH (stu)<-[:of_study_personnel]-(stp:study_personnel)
   OPTIONAL MATCH (stu)<-[:of_study_funding]-(stf:study_funding)
