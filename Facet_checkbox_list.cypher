@@ -114,7 +114,7 @@ order by tumor_classification
 
 // data category facet
 match (file)
-where (file:clinical_measure_file OR file: sequencing_file OR file:pathology_file OR file:radiology_file OR file:methylation_array_file OR file:cytogenomic_file)
+where (file:clinical_measure_file OR file: sequencing_file OR file:pathology_file OR file:radiology_file OR file:methylation_array_file OR file:cytogenomic_file OR file:generic_file)
 with distinct file.data_category as data_category_str
 where trim(data_category_str) <> ''
 with apoc.text.split(data_category_str, ';') as arr
@@ -124,13 +124,13 @@ order by toLower(data_category)
 
 // file type facet
 match (file)
-where (file:clinical_measure_file OR file: sequencing_file OR file:pathology_file OR file:radiology_file OR file:methylation_array_file OR file:cytogenomic_file)
+where (file:clinical_measure_file OR file: sequencing_file OR file:pathology_file OR file:radiology_file OR file:methylation_array_file OR file:cytogenomic_file OR file:generic_file)
 return distinct file.file_type as file_type
 order by file_type
 
 // file mapping level facet
 match (file)
-where (file:clinical_measure_file OR file: sequencing_file OR file:pathology_file OR file:radiology_file OR file:methylation_array_file OR file:cytogenomic_file)
+where (file:clinical_measure_file OR file: sequencing_file OR file:pathology_file OR file:radiology_file OR file:methylation_array_file OR file:cytogenomic_file OR file:generic_file)
 return distinct file.file_mapping_level as file_mapping_level
 order by file_mapping_level
 
@@ -152,7 +152,7 @@ order by study_name
 
 // library selection facet
 match (file)
-where (file:clinical_measure_file OR file: sequencing_file OR file:pathology_file OR file:radiology_file OR file:methylation_array_file OR file:cytogenomic_file)
+where (file:clinical_measure_file OR file: sequencing_file OR file:pathology_file OR file:radiology_file OR file:methylation_array_file OR file:cytogenomic_file OR file:generic_file)
 with distinct file.library_selection as library_selection
 where library_selection is not null
 return library_selection
@@ -160,7 +160,7 @@ order by tolower(library_selection)
 
 // library source material facet
 match (file)
-where (file:clinical_measure_file OR file: sequencing_file OR file:pathology_file OR file:radiology_file OR file:methylation_array_file OR file:cytogenomic_file)
+where (file:clinical_measure_file OR file: sequencing_file OR file:pathology_file OR file:radiology_file OR file:methylation_array_file OR file:cytogenomic_file OR file:generic_file)
 with distinct file.library_source_material as library_source_material
 where library_source_material is not null
 return library_source_material
@@ -168,7 +168,7 @@ order by tolower(library_source_material)
 
 // library strategy facet
 match (file)
-where (file:clinical_measure_file OR file: sequencing_file OR file:pathology_file OR file:radiology_file OR file:methylation_array_file OR file:cytogenomic_file)
+where (file:clinical_measure_file OR file: sequencing_file OR file:pathology_file OR file:radiology_file OR file:methylation_array_file OR file:cytogenomic_file OR file:generic_file)
 with distinct file.library_strategy as library_strategy
 where library_strategy is not null
 return library_strategy
@@ -176,7 +176,7 @@ order by tolower(library_strategy)
 
 // library source molecule facet
 match (file)
-where (file:clinical_measure_file OR file: sequencing_file OR file:pathology_file OR file:radiology_file OR file:methylation_array_file OR file:cytogenomic_file)
+where (file:clinical_measure_file OR file: sequencing_file OR file:pathology_file OR file:radiology_file OR file:methylation_array_file OR file:cytogenomic_file OR file:generic_file)
 with distinct file.library_source_molecule as library_source_molecule
 where library_source_molecule is not null
 return library_source_molecule
