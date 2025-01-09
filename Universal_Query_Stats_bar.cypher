@@ -366,7 +366,7 @@ Call {
     union all
     with st
     MATCH (st)<--(p:participant)<--(sm1:sample)<-[*2..2]-(sm:sample)
-    where not ((sm)<--(:sequencing_file)) and not ((sm)<--(:generic_file)) and not ((sm)<--(:cytogenomic_file)) and not ((sm)<--(:pathology_file)) and not ((sm)<--(:methylation_array_file)) and not ((p)<--(:radiology_file)) and not ((p)<--(:clinical_measure_file) and not ((p)<--(:generic_file))
+    where not ((sm)<--(:sequencing_file)) and not ((sm)<--(:generic_file)) and not ((sm)<--(:cytogenomic_file)) and not ((sm)<--(:pathology_file)) and not ((sm)<--(:methylation_array_file)) and not ((p)<--(:radiology_file)) and not ((p)<--(:clinical_measure_file)) and not ((p)<--(:generic_file))
     OPTIONAL MATCH (p)<-[:of_diagnosis]-(dg:diagnosis)
     with p, sm1, sm, apoc.coll.union(COLLECT(DISTINCT {
                         sample_anatomic_site: apoc.text.split(sm1.anatomic_site, ';'),
@@ -396,7 +396,7 @@ Call {
                         diagnosis: dg.diagnosis
                     })) as sample_diagnosis_filter_1
     MATCH (st:study)<--(p)<--(sm1)<-[*2..2]-(sm)
-    where not ((sm)<--(:sequencing_file)) and not ((sm)<--(:generic_file)) and not ((sm)<--(:cytogenomic_file)) and not ((sm)<--(:pathology_file)) and not ((sm)<--(:methylation_array_file)) and not ((p)<--(:radiology_file)) and not ((p)<--(:clinical_measure_file) and not ((p)<--(:generic_file))
+    where not ((sm)<--(:sequencing_file)) and not ((sm)<--(:generic_file)) and not ((sm)<--(:cytogenomic_file)) and not ((sm)<--(:pathology_file)) and not ((sm)<--(:methylation_array_file)) and not ((p)<--(:radiology_file)) and not ((p)<--(:clinical_measure_file)) and not ((p)<--(:generic_file))
     OPTIONAL MATCH (sm1)<--(dg:diagnosis)
     with p, sm1, sm, sample_diagnosis_filter_1, apoc.coll.union(COLLECT(DISTINCT {
                         sample_anatomic_site: apoc.text.split(sm1.anatomic_site, ';'),
@@ -427,7 +427,7 @@ Call {
                     })) AS sample_diagnosis_filter_2
     with p, sm1, sm, apoc.coll.union(sample_diagnosis_filter_1, sample_diagnosis_filter_2) as sample_diagnosis_filter_3
     MATCH (st:study)<--(p)<--(sm1)<-[*2..2]-(sm)
-    where not ((sm)<--(:sequencing_file)) and not ((sm)<--(:generic_file)) and not ((sm)<--(:cytogenomic_file)) and not ((sm)<--(:pathology_file)) and not ((sm)<--(:methylation_array_file)) and not ((p)<--(:radiology_file)) and not ((p)<--(:clinical_measure_file) and not ((p)<--(:generic_file))
+    where not ((sm)<--(:sequencing_file)) and not ((sm)<--(:generic_file)) and not ((sm)<--(:cytogenomic_file)) and not ((sm)<--(:pathology_file)) and not ((sm)<--(:methylation_array_file)) and not ((p)<--(:radiology_file)) and not ((p)<--(:clinical_measure_file)) and not ((p)<--(:generic_file))
     OPTIONAL MATCH (sm)<--(dg:diagnosis)
     with p, sm1, sm, sample_diagnosis_filter_3, apoc.coll.union(COLLECT(DISTINCT {
                         sample_anatomic_site: apoc.text.split(sm1.anatomic_site, ';'),
@@ -506,7 +506,7 @@ Call {
     union all
     with st
     MATCH (st)<--(p:participant)<--(sm:sample)
-    where not ((sm)<-[*..3]-(:sequencing_file)) and not ((sm)<-[*..3]-(:generic_file)) and not ((sm)<-[*..3]-(:cytogenomic_file)) and not ((sm)<-[*..3]-(:pathology_file)) and not ((sm)<-[*..3]-(:methylation_array_file)) and not ((p)<--(:radiology_file)) and not ((p)<--(:clinical_measure_file) and not ((p)<--(:generic_file))
+    where not ((sm)<-[*..3]-(:sequencing_file)) and not ((sm)<-[*..3]-(:generic_file)) and not ((sm)<-[*..3]-(:cytogenomic_file)) and not ((sm)<-[*..3]-(:pathology_file)) and not ((sm)<-[*..3]-(:methylation_array_file)) and not ((p)<--(:radiology_file)) and not ((p)<--(:clinical_measure_file)) and not ((p)<--(:generic_file))
     OPTIONAL MATCH (p)<-[*..2]-(dg:diagnosis)
     OPTIONAL MATCH (p)<-[:of_survival]-(su:survival)
     OPTIONAL MATCH (p)<-[:of_treatment]-(tm:treatment)
@@ -618,7 +618,7 @@ Call {
     union all
     with st
     MATCH (st)<--(p:participant)
-    where not ((p)<--(:sample)) and not ((p)<--(:radiology_file)) and not ((p)<--(:clinical_measure_file) and not ((p)<--(:generic_file))
+    where not ((p)<--(:sample)) and not ((p)<--(:radiology_file)) and not ((p)<--(:clinical_measure_file)) and not ((p)<--(:generic_file))
     OPTIONAL MATCH (p)<-[:of_diagnosis]-(dg:diagnosis)
     OPTIONAL MATCH (p)<-[:of_survival]-(su:survival)
     OPTIONAL MATCH (p)<-[:of_treatment]-(tm:treatment)
