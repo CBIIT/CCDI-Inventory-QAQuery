@@ -44,7 +44,7 @@ with st, p, tm.age_at_treatment_start as age_at_treatment_start, apoc.text.split
 where ANY(element IN [''] WHERE element IN treatment_type) and ANY(element IN [''] WHERE element IN treatment_agent) and age_at_treatment_start >= [''] and age_at_treatment_start <= ['']
 with distinct st
 optional match (st)<--(p:participant)<--(tr:treatment_response)
-where trf.response_category in [''] and trf.age_at_response >= [''] and trf.age_at_response <= ['']
+where tr.response_category in [''] and tr.age_at_response >= [''] and tr.age_at_response <= ['']
 with distinct st
 MATCH (st)<-[:of_participant]-(p:participant)
 with st, count(p) as num_p
