@@ -1,5 +1,5 @@
 Match (st:study)
-where st.dbgap_accession in ['']
+where st.dbgap_accession in [''] and st.study_status in ['']
 optional match (st)<-[*..6]-(file)
 where (file:clinical_measure_file or file:generic_file or file:radiology_file or file:sequencing_file or file:pathology_file or file:methylation_array_file or file:cytogenomic_file)
 with st, file,
@@ -81,6 +81,7 @@ WITH st, num_p, cancers, sites, file_types, num_files, num_samples, file.id as f
 with DISTINCT
 st.id as id,
 st.study_id as study_id,
+st.study_status as study_status,
 apoc.text.join(COLLECT(DISTINCT stf.grant_id), ';') as grant_id,
 apoc.text.join(COLLECT(DISTINCT pub.pubmed_id), ';') as pubmed_ids,
 st.dbgap_accession as dbgap_accession,
@@ -96,6 +97,7 @@ num_files as num_of_files
 RETURN DISTINCT
 study_name as `Study Name`,
 study_id as `Study ID`,
+study_status as `Study Status`,
 CASE WHEN size(diagnosis_cancer) > 5 THEN apoc.text.join(apoc.coll.remove(diagnosis_cancer, 5, 10000), '\n') + '\nRead More'  else apoc.text.join(diagnosis_cancer, '\n') END as `Diagnosis (Top 5)`,
 CASE WHEN size(diagnosis_anatomic_site) > 5 THEN apoc.text.join(apoc.coll.remove(diagnosis_anatomic_site, 5, 10000), '\n') + '\nRead More'  else apoc.text.join(diagnosis_anatomic_site, '\n') END as `Diagnosis Anatomic Site (Top 5)`,
 num_of_participants as `Number of Participants`,

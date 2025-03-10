@@ -1,5 +1,5 @@
 MATCH (st:study)
-where st.dbgap_accession in ['']
+where st.dbgap_accession in [''] and st.study_status in ['']
 with st
 call {
   with st

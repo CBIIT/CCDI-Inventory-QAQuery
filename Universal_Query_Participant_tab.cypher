@@ -1,5 +1,5 @@
 MATCH (p:participant)-->(st:study)
-where st.dbgap_accession in ['']
+where st.dbgap_accession in [''] and st.study_status in ['']
 optional match (p)<--(sm:sample)
 optional match (p)<--(file)
 where (file: clinical_measure_file or file: generic_file or file: radiology_file)
