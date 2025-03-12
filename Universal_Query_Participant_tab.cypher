@@ -1,5 +1,5 @@
 MATCH (p:participant)-->(st:study)
-where st.dbgap_accession in [''] and st.study_status in ['']
+where st.dbgap_accession in ['']
 optional match (p)<--(sm:sample)
 optional match (p)<--(file)
 where (file: clinical_measure_file or file: generic_file or file: radiology_file)
@@ -244,6 +244,7 @@ with p, sample_diagnosis_file_filters, COLLECT(DISTINCT {
   OPTIONAL MATCH (st:study)<-[:of_participant]-(p)
   OPTIONAL MATCH (st)<-[:of_study_personnel]-(stp:study_personnel)
   OPTIONAL MATCH (st)<-[:of_study_funding]-(stf:study_funding)
+  OPTIONAL MATCH (d:diagnosis)-[:of_diagnosis]->(p)
   WITH p, sy, sample_diagnosis_file_filter, COLLECT(DISTINCT {last_known_survival_status: su.last_known_survival_status, 
               event_free_survival_status: su.event_free_survival_status, 
               first_event: su.first_event,
@@ -252,14 +253,31 @@ with p, sample_diagnosis_file_filters, COLLECT(DISTINCT {
             treatment_agent: apoc.text.split(tm.treatment_agent, ';'),
             age_at_treatment_start: tm.age_at_treatment_start}) as treatment_filters,
             COLLECT(DISTINCT{response_category: tr.response_category,
-            age_at_response: tr.age_at_response}) as treatment_response_filters , file, st, stf, stp
+            age_at_response: tr.age_at_response}) as treatment_response_filters , file, st, stf, stp,
+            apoc.text.join(COLLECT(distinct d.diagnosis), ';') AS diagnosis_str,
+            apoc.text.join(apoc.coll.toSet(apoc.text.split(apoc.text.join(COLLECT(distinct d.anatomic_site), ';'), ';')), ';') AS diagnosis_anatomic_site_str,
+            apoc.text.join(COLLECT(distinct toString(case d.age_at_diagnosis when -999 then 'Not Reported' else coalesce(d.age_at_diagnosis, '') end)), ';') AS age_at_diagnosis_str,
+            apoc.text.join(apoc.coll.toSet(apoc.text.split(apoc.text.join(COLLECT(distinct tm.treatment_agent), ';'), ';')), ';') as treatment_agent_str,
+            apoc.text.join(apoc.coll.toSet(apoc.text.split(apoc.text.join(COLLECT(distinct tm.treatment_type), ';'), ';')), ';') as treatment_type_str,
+            apoc.text.join(COLLECT(distinct toString(case tm.age_at_treatment_start when -999 then 'Not Reported' else coalesce(tm.age_at_treatment_start, '') end)), ';') AS age_at_treatment_start_str,
+            apoc.text.join(COLLECT(distinct su.first_event), ';') AS first_event_str,
+            apoc.text.join(COLLECT(distinct su.last_known_survival_status), ';') AS last_known_survival_status_str,
+            apoc.text.join(COLLECT(distinct toString(case su.age_at_last_known_survival_status when -999 then 'Not Reported' else coalesce(su.age_at_last_known_survival_status, '') end)), ';') AS age_at_last_known_survival_status_str
   with DISTINCT
     p.id as id,
     p.participant_id as participant_id,
     apoc.text.split(p.race, ';') as race,
     p.race as race_str,
     p.sex_at_birth as sex_at_birth,
-    apoc.text.join(Collect(distinct sy.synonym_id), ',') as alternate_participant_id,
+    diagnosis_str as diagnosis_str,
+    diagnosis_anatomic_site_str as diagnosis_anatomic_site_str,
+    age_at_diagnosis_str as age_at_diagnosis_str,
+    treatment_agent_str as treatment_agent_str,
+    treatment_type_str as treatment_type_str,
+    age_at_treatment_start_str as age_at_treatment_start_str,
+    first_event_str as first_event_str,
+    last_known_survival_status_str as last_known_survival_status_str,
+    age_at_last_known_survival_status_str as age_at_last_known_survival_status_str,
     treatment_filters as treatment_filters,
     survival_filters as survival_filters,
     treatment_response_filters as treatment_response_filters,
@@ -267,15 +285,16 @@ with p, sample_diagnosis_file_filters, COLLECT(DISTINCT {
     st.study_id as study_id,
     st.dbgap_accession as dbgap_accession,
     st.study_acronym as study_acronym,
-    st.study_name as study_name
-  where study_acronym in [''] and study_name in ['']
-  with id, participant_id, dbgap_accession, sex_at_birth, race_str, race, alternate_participant_id, sample_diagnosis_file_filters, survival_filters, treatment_filters, treatment_response_filters
+    st.study_name as study_name,
+    st.study_status as study_status
+  where study_acronym in [''] and study_name in [''] and study_status in ['']
+  with id, participant_id, dbgap_accession, sex_at_birth, race_str, race, diagnosis_str, diagnosis_anatomic_site_str, age_at_diagnosis_str, treatment_agent_str, treatment_type_str, age_at_treatment_start_str, first_event_str, last_known_survival_status_str, age_at_last_known_survival_status_str, sample_diagnosis_file_filters, survival_filters, treatment_filters, treatment_response_filters
   where participant_id in [''] and sex_at_birth in [''] and ANY(element IN [''] WHERE element IN race)
   unwind sample_diagnosis_file_filters as sample_diagnosis_file_filter
   unwind survival_filters as survival_filter
   unwind treatment_filters as treatment_filter
   unwind treatment_response_filters as treatment_response_filter
-  with id, participant_id, dbgap_accession, sex_at_birth, race_str, alternate_participant_id, sample_diagnosis_file_filter, survival_filter, treatment_filter, treatment_response_filter
+  with id, participant_id, dbgap_accession, sex_at_birth, race_str, diagnosis_str, diagnosis_anatomic_site_str, age_at_diagnosis_str, treatment_agent_str, treatment_type_str, age_at_treatment_start_str, first_event_str, last_known_survival_status_str, age_at_last_known_survival_status_str, sample_diagnosis_file_filter, survival_filter, treatment_filter, treatment_response_filter
   where sample_diagnosis_file_filter.age_at_diagnosis >= [''] and sample_diagnosis_file_filter.age_at_diagnosis <= [''] and sample_diagnosis_file_filter.diagnosis in [''] and ANY(element IN [''] WHERE element IN sample_diagnosis_file_filter.diagnosis_anatomic_site) and sample_diagnosis_file_filter.diagnosis_classification_system in [''] and sample_diagnosis_file_filter.diagnosis_basis in [''] and sample_diagnosis_file_filter.disease_phase in [''] 
         and sample_diagnosis_file_filter.participant_age_at_collection >= [''] and sample_diagnosis_file_filter.participant_age_at_collection <= [''] and ANY(element IN [''] WHERE element IN sample_diagnosis_file_filter.sample_anatomic_site) and sample_diagnosis_file_filter.sample_tumor_status in [''] and sample_diagnosis_file_filter.tumor_classification in [''] 
         and ANY(element IN [''] WHERE element IN sample_diagnosis_file_filter.data_category) and sample_diagnosis_file_filter.file_type in [''] and sample_diagnosis_file_filter.file_mapping_level in ['']
@@ -285,11 +304,19 @@ with p, sample_diagnosis_file_filters, COLLECT(DISTINCT {
         and ANY(element IN [''] WHERE element IN treatment_filter.treatment_type) and ANY(element IN [''] WHERE element IN treatment_filter.treatment_agent)
         and treatment_filter.age_at_treatment_start >= [''] and treatment_filter.age_at_treatment_start <= ['']
         and treatment_response_filter.response_category in [''] and treatment_response_filter.age_at_response >= [''] and treatment_response_filter.age_at_response <= [''] 
-with distinct id, participant_id, dbgap_accession, sex_at_birth, race_str, alternate_participant_id
+with distinct id, participant_id, dbgap_accession, sex_at_birth, race_str, diagnosis_str, diagnosis_anatomic_site_str, age_at_diagnosis_str, treatment_agent_str, treatment_type_str, age_at_treatment_start_str, first_event_str, last_known_survival_status_str, age_at_last_known_survival_status_str
   return
   coalesce(participant_id, '') AS `Participant ID`,
   coalesce(dbgap_accession, '') AS `Study ID`,
-  coalesce(sex_at_birth, '') AS `Sex` ,
+  coalesce(sex_at_birth, '') AS `Sex at Birth` ,
   coalesce(race_str, '') AS `Race`,
-  coalesce(alternate_participant_id, '') AS `Synonym Participant ID`
+  diagnosis_str as `Diagnosis`,
+  diagnosis_anatomic_site_str as `Diagnosis Anatomic Site`,
+  age_at_diagnosis_str as `Age at Diagnosis (days)`,
+  treatment_agent_str as `Treatment Agent`,
+  treatment_type_str as `Treatment Type`,
+  age_at_treatment_start_str as `Age at Treatment Start (days)`,
+  first_event_str as `First Event`,
+  last_known_survival_status_str as `Last Known Survival Status`,
+  age_at_last_known_survival_status_str as `Age at Last Known Survival Status (days)`
   Order by participant_id Limit 100

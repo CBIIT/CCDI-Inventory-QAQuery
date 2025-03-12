@@ -147,6 +147,11 @@ match (st:study)
 return distinct st.study_name as study_name
 order by study_name
 
+// study status facet
+match (st:study)
+return distinct st.study_status as study_status
+order by study_status
+
 
 /* Sequencing Library Section */
 
