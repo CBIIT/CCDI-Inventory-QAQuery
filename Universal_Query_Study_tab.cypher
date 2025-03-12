@@ -19,7 +19,7 @@ with st, file,
                         WHEN 'sequencing_file' THEN file.library_strategy
                         ELSE null END as library_str
 with st, apoc.coll.flatten(collect(distinct file_c)) as data_category, collect(distinct file_t) as file_type, collect(distinct file_ml) as file_mapping_level, collect(distinct library_s) as library_selection, collect(distinct library_source_mat) as library_source_material, collect(distinct library_source_mol) as library_source_molecule, collect(distinct library_str) as library_strategy
-where st.study_acronym in [''] and st.study_name in [''] 
+where st.study_acronym in [''] and st.study_name in [''] and st.study_status in ['']
         and ANY(element IN [''] WHERE element IN data_category) and ANY(element IN [''] WHERE element IN file_type) and ANY(element IN [''] WHERE element IN file_mapping_level)
         and ANY(element IN [''] WHERE element IN library_selection) and ANY(element IN [''] WHERE element IN library_source_material) and ANY(element IN [''] WHERE element IN library_source_molecule) and ANY(element IN [''] WHERE element IN library_strategy)
 with distinct st
@@ -81,10 +81,12 @@ WITH st, num_p, cancers, sites, file_types, num_files, num_samples, file.id as f
 with DISTINCT
 st.id as id,
 st.study_id as study_id,
+st.study_status as study_status,
 apoc.text.join(COLLECT(DISTINCT stf.grant_id), ';') as grant_id,
 apoc.text.join(COLLECT(DISTINCT pub.pubmed_id), ';') as pubmed_ids,
 st.dbgap_accession as dbgap_accession,
 st.study_name as study_name,
+st.study_status as study_status,
 st.study_acronym as study_acronym,
 apoc.text.join(COLLECT(DISTINCT stp.personnel_name), ';') as PIs,
 num_p as num_of_participants,
@@ -96,6 +98,7 @@ num_files as num_of_files
 RETURN DISTINCT
 study_name as `Study Name`,
 study_id as `Study ID`,
+study_status as `Study Status`,
 CASE WHEN size(diagnosis_cancer) > 5 THEN apoc.text.join(apoc.coll.remove(diagnosis_cancer, 5, 10000), '\n') + '\nRead More'  else apoc.text.join(diagnosis_cancer, '\n') END as `Diagnosis (Top 5)`,
 CASE WHEN size(diagnosis_anatomic_site) > 5 THEN apoc.text.join(apoc.coll.remove(diagnosis_anatomic_site, 5, 10000), '\n') + '\nRead More'  else apoc.text.join(diagnosis_anatomic_site, '\n') END as `Diagnosis Anatomic Site (Top 5)`,
 num_of_participants as `Number of Participants`,

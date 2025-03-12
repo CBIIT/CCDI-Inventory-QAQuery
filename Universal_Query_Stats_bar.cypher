@@ -127,6 +127,7 @@ Call {
     st.dbgap_accession as dbgap_accession,
     st.study_acronym as study_acronym,
     st.study_name as study_name,
+    st.study_status as study_status,
     p.participant_id AS participant_id,
     null AS sample_id,
     COLLECT(DISTINCT {
@@ -280,6 +281,7 @@ Call {
     st.dbgap_accession as dbgap_accession,
     st.study_acronym as study_acronym,
     st.study_name as study_name,
+    st.study_status as study_status,
     p.participant_id AS participant_id,
     CASE sm1.sample_id WHEN sm.sample_id THEN sm.sample_id
                 ELSE sm1.sample_id + ',' + sm.sample_id END AS sample_id,
@@ -333,6 +335,7 @@ Call {
     st.dbgap_accession as dbgap_accession,
     st.study_acronym as study_acronym,
     st.study_name as study_name,
+    st.study_status as study_status,
     null AS participant_id,
     sm.sample_id AS sample_id,
     null AS participant_filters,
@@ -489,6 +492,7 @@ Call {
     st.dbgap_accession as dbgap_accession,
     st.study_acronym as study_acronym,
     st.study_name as study_name,
+    st.study_status as study_status,
     p.participant_id AS participant_id,
     sm.sample_id AS sample_id,
     COLLECT(DISTINCT {
@@ -539,6 +543,7 @@ Call {
     st.dbgap_accession as dbgap_accession,
     st.study_acronym as study_acronym,
     st.study_name as study_name,
+    st.study_status as study_status,
     p.participant_id AS participant_id,
     sm.sample_id AS sample_id,
     COLLECT(DISTINCT {
@@ -591,6 +596,7 @@ Call {
     st.dbgap_accession as dbgap_accession,
     st.study_acronym as study_acronym,
     st.study_name as study_name,
+    st.study_status as study_status,
     null AS participant_id,
     sm.sample_id AS sample_id,
     null AS participant_filters,
@@ -651,6 +657,7 @@ Call {
     st.dbgap_accession as dbgap_accession,
     st.study_acronym as study_acronym,
     st.study_name as study_name,
+    st.study_status as study_status,
     p.participant_id AS participant_id,
     null AS sample_id,
     COLLECT(DISTINCT {
@@ -679,15 +686,15 @@ Call {
     null AS library_source_molecule,
     null AS library_strategy
 }
-with id, guid, file_name, data_category, file_type, file_description, file_size, file_access, file_mapping_level, md5sum, study_id, study_acronym, study_name, pid, participant_id, sample_id, participant_filters, sample_diagnosis_filters, survival_filters, treatment_filters, treatment_response_filters, library_selection,library_source_material, library_source_molecule, library_strategy
+with id, guid, file_name, data_category, file_type, file_description, file_size, file_access, file_mapping_level, md5sum, study_id, study_acronym, study_name, study_status, pid, participant_id, sample_id, participant_filters, sample_diagnosis_filters, survival_filters, treatment_filters, treatment_response_filters, library_selection,library_source_material, library_source_molecule, library_strategy
 unwind participant_filters as participant_filter
-with id, guid, file_name, data_category, file_type, file_description, file_size, file_access, file_mapping_level, md5sum, study_id, study_acronym, study_name, pid, participant_id, sample_id, participant_filter, sample_diagnosis_filters, survival_filters, treatment_filters, treatment_response_filters, library_selection,library_source_material, library_source_molecule, library_strategy
+with id, guid, file_name, data_category, file_type, file_description, file_size, file_access, file_mapping_level, md5sum, study_id, study_acronym, study_name, study_status, pid, participant_id, sample_id, participant_filter, sample_diagnosis_filters, survival_filters, treatment_filters, treatment_response_filters, library_selection,library_source_material, library_source_molecule, library_strategy
 where participant_id in [''] and participant_filter.sex_at_birth in [''] and ANY(element IN [''] WHERE element IN participant_filter.race)
 unwind sample_diagnosis_filters as sample_diagnosis_filter
 unwind survival_filters as survival_filter
 unwind treatment_filters as treatment_filter
 unwind treatment_response_filters as treatment_response_filter
-with id, guid, file_name, data_category, file_type, file_description, file_size, file_access, file_mapping_level, md5sum, study_id, study_acronym, study_name, pid, participant_id, sample_id, sample_diagnosis_filter, survival_filter, treatment_filter, treatment_response_filter, library_selection,library_source_material, library_source_molecule, library_strategy
+with id, guid, file_name, data_category, file_type, file_description, file_size, file_access, file_mapping_level, md5sum, study_id, study_acronym, study_name, study_status, pid, participant_id, sample_id, sample_diagnosis_filter, survival_filter, treatment_filter, treatment_response_filter, library_selection,library_source_material, library_source_molecule, library_strategy
 where sample_diagnosis_filter.age_at_diagnosis >= [''] and sample_diagnosis_filter.age_at_diagnosis <= [''] and sample_diagnosis_filter.diagnosis in [''] and ANY(element IN [''] WHERE element IN sample_diagnosis_filter.diagnosis_anatomic_site) and sample_diagnosis_filter.diagnosis_classification_system in [''] and sample_diagnosis_filter.diagnosis_basis in [''] and sample_diagnosis_filter.disease_phase in ['']
         and sample_diagnosis_filter.participant_age_at_collection >= [''] and sample_diagnosis_filter.participant_age_at_collection <= [''] and ANY(element IN [''] WHERE element IN sample_diagnosis_filter.sample_anatomic_site) and sample_diagnosis_filter.sample_tumor_status in [''] and sample_diagnosis_filter.tumor_classification in ['']
         and survival_filter.last_known_survival_status in [''] and survival_filter.event_free_survival_status in [''] and survival_filter.first_event in ['']
@@ -695,10 +702,10 @@ where sample_diagnosis_filter.age_at_diagnosis >= [''] and sample_diagnosis_filt
         and ANY(element IN [''] WHERE element IN treatment_filter.treatment_type) and ANY(element IN [''] WHERE element IN treatment_filter.treatment_agent)
         and treatment_filter.age_at_treatment_start >= [''] and treatment_filter.age_at_treatment_start <= ['']
         and treatment_response_filter.response_category in [''] and treatment_response_filter.age_at_response >= [''] and treatment_response_filter.age_at_response <= [''] 
-with distinct id, guid, file_name, data_category, file_type, file_description, file_size, file_access, file_mapping_level, md5sum, study_id, study_acronym, study_name, pid, participant_id, sample_id, library_selection, library_source_material, library_source_molecule, library_strategy
+with distinct id, guid, file_name, data_category, file_type, file_description, file_size, file_access, file_mapping_level, md5sum, study_id, study_acronym, study_name, study_status, pid, participant_id, sample_id, library_selection, library_source_material, library_source_molecule, library_strategy
 call {
-  with id, guid, file_name, data_category, file_type, file_description, file_size, file_access, file_mapping_level, md5sum, study_id, study_acronym, study_name, pid, participant_id, sample_id,library_selection,library_source_material, library_source_molecule, library_strategy
-  return id as fid, guid as dig, file_name as fn, data_category as fc, file_type as ft, file_description as fd, file_size as fsize, file_mapping_level as fml, file_access as fa, md5sum as md5, study_id as sid, study_acronym as sa, study_name as sn, pid as u_p_id, participant_id as p_id, sample_id as smid,library_selection as ls, library_source_material as lsma, library_source_molecule as lsmo, library_strategy as listr
+  with id, guid, file_name, data_category, file_type, file_description, file_size, file_access, file_mapping_level, md5sum, study_id, study_acronym, study_name, study_status, pid, participant_id, sample_id,library_selection,library_source_material, library_source_molecule, library_strategy
+  return id as fid, guid as dig, file_name as fn, data_category as fc, file_type as ft, file_description as fd, file_size as fsize, file_mapping_level as fml, file_access as fa, md5sum as md5, study_id as sid, study_acronym as sa, study_name as sn, study_status as ss, pid as u_p_id, participant_id as p_id, sample_id as smid,library_selection as ls, library_source_material as lsma, library_source_molecule as lsmo, library_strategy as listr
   UNION ALL
   with study_id
   MATCH (file:clinical_measure_file)
@@ -721,6 +728,7 @@ call {
     stu.study_id AS sid,
     stu.study_acronym as sa,
     stu.study_name as sn,
+    stu.study_status as ss,
     null AS p_id,
     null AS u_p_id,
     null AS smid,
@@ -750,6 +758,7 @@ call {
     stu.study_id AS sid,
     stu.study_acronym as sa,
     stu.study_name as sn,
+    stu.study_status as ss,
     null AS p_id,
     null AS u_p_id,
     null AS smid,
@@ -758,9 +767,9 @@ call {
     null AS lsmo,
     null AS listr
 }
-with fid as id, dig as guid, fn as file_name, fc as data_category, ft as file_type, fd as file_description, fsize as file_size, fa as file_access, fml as file_mapping_level, md5 as md5sum, sid as study_id, sa as study_acronym, sn as study_name, u_p_id as unique_participant_id, p_id as participant_id, smid as sample_id,ls as library_selection,lsma as library_source_material, lsmo as library_source_molecule, listr as library_strategy
+with fid as id, dig as guid, fn as file_name, fc as data_category, ft as file_type, fd as file_description, fsize as file_size, fa as file_access, fml as file_mapping_level, md5 as md5sum, sid as study_id, sa as study_acronym, sn as study_name, ss as study_status, u_p_id as unique_participant_id, p_id as participant_id, smid as sample_id,ls as library_selection,lsma as library_source_material, lsmo as library_source_molecule, listr as library_strategy
 where ANY(element IN [''] WHERE element IN data_category) and file_type in [''] and file_mapping_level in ['']
-        and study_acronym in [''] and study_name in [''] 
+        and study_acronym in [''] and study_name in [''] and study_status in ['']
         and library_selection in [''] and library_source_material in [''] and library_source_molecule in [''] and library_strategy in ['']
 with DISTINCT id, study_id, unique_participant_id, sample_id
 with id, study_id, unique_participant_id, case sample_id when null then [null] else apoc.text.split(sample_id, ',') end as sample_ids

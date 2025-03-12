@@ -102,7 +102,8 @@ call {
     study_id: st.study_id,
     dbgap_accession: st.dbgap_accession,
     study_acronym: st.study_acronym,
-    study_name: st.study_name
+    study_name: st.study_name,
+    study_status: st.study_status
   }) AS opensearch_data
   OPTIONAL MATCH (sm)-[*..3]->(:participant)<-[:of_survival]-(su:survival)
   WITH sm, opensearch_data, COLLECT(DISTINCT {last_known_survival_status: su.last_known_survival_status, 
@@ -125,6 +126,10 @@ call {
   WITH sm, apoc.map.merge(opensearch_data, {
     treatment_response_filters: treatment_response_filters
   }) AS opensearch_data
+  OPTIONAL MATCH (sm)<-[*..3]-(dg:diagnosis)
+  WITH sm, apoc.map.merge(opensearch_data, {
+    diagnosis_str: apoc.text.join(COLLECT(distinct dg.diagnosis), ';')
+  }) AS opensearch_data
   with opensearch_data
   RETURN DISTINCT
     opensearch_data.id as id,
@@ -142,6 +147,8 @@ call {
     opensearch_data.dbgap_accession as dbgap_accession,
     opensearch_data.study_acronym as study_acronym,
     opensearch_data.study_name as study_name,
+    opensearch_data.study_status as study_status,
+    opensearch_data.diagnosis_str as diagnosis_str,
     opensearch_data.diagnosis_filters AS diagnosis_filters,
     opensearch_data.treatment_filters as treatment_filters,
     opensearch_data.survival_filters as survival_filters,
@@ -174,6 +181,8 @@ call {
       st.dbgap_accession as dbgap_accession,
       st.study_acronym as study_acronym,
       st.study_name as study_name,
+      st.study_status as study_status,
+      apoc.text.join(COLLECT(distinct dg.diagnosis), ';') as diagnosis_str,
       COLLECT(DISTINCT {
           age_at_diagnosis: dg.age_at_diagnosis,
           diagnosis_anatomic_site: apoc.text.split(dg.anatomic_site, ';'),
@@ -206,37 +215,38 @@ call {
                                   ELSE null END
                 }) END AS file_filters
 }
-with id, sample_id, participant_id, study_id, sex_at_birth, race, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, diagnosis_filters, survival_filters, treatment_filters, treatment_response_filters, file_filters, dbgap_accession, study_acronym, study_name
-where study_acronym in [''] and study_name in ['']
-with id, sample_id, participant_id, study_id, sex_at_birth, race, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, diagnosis_filters, survival_filters, treatment_filters, treatment_response_filters, file_filters, dbgap_accession
+with id, sample_id, participant_id, study_id, sex_at_birth, race, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, diagnosis_filters, survival_filters, treatment_filters, treatment_response_filters, file_filters, dbgap_accession, study_acronym, study_name, study_status, diagnosis_str
+where study_acronym in [''] and study_name in [''] and study_status in ['']
+with id, sample_id, participant_id, study_id, sex_at_birth, race, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, diagnosis_filters, survival_filters, treatment_filters, treatment_response_filters, file_filters, dbgap_accession, diagnosis_str
 where participant_id in [''] and sex_at_birth in [''] and ANY(element IN [''] WHERE element IN race)
 unwind diagnosis_filters as diagnosis_filter
-with id, sample_id, participant_id, study_id, sex_at_birth, race, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, diagnosis_filter, survival_filters, treatment_filters, treatment_response_filters, file_filters, dbgap_accession
+with id, sample_id, participant_id, study_id, sex_at_birth, race, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, diagnosis_filter, survival_filters, treatment_filters, treatment_response_filters, file_filters, dbgap_accession, diagnosis_str
 where diagnosis_filter.age_at_diagnosis >= [''] and diagnosis_filter.age_at_diagnosis <= [''] and diagnosis_filter.diagnosis in [''] and ANY(element IN [''] WHERE element IN diagnosis_filter.diagnosis_anatomic_site) and diagnosis_filter.diagnosis_classification_system in [''] and diagnosis_filter.diagnosis_basis in [''] and diagnosis_filter.disease_phase in ['']
-with id, sample_id, participant_id, study_id, sex_at_birth, race, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, survival_filters, treatment_filters, treatment_response_filters, file_filters, dbgap_accession
+with id, sample_id, participant_id, study_id, sex_at_birth, race, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, survival_filters, treatment_filters, treatment_response_filters, file_filters, dbgap_accession, diagnosis_str
 unwind survival_filters as survival_filter
 unwind treatment_filters as treatment_filter
 unwind treatment_response_filters as treatment_response_filter
-with id, sample_id, participant_id, study_id, sex_at_birth, race, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, survival_filter, treatment_filter, treatment_response_filter, file_filters, dbgap_accession
+with id, sample_id, participant_id, study_id, sex_at_birth, race, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, survival_filter, treatment_filter, treatment_response_filter, file_filters, dbgap_accession, diagnosis_str
 where survival_filter.last_known_survival_status in [''] and survival_filter.event_free_survival_status in [''] and survival_filter.first_event in ['']
         and survival_filter.age_at_last_known_survival_status >= [''] and survival_filter.age_at_last_known_survival_status <= ['']
         and ANY(element IN [''] WHERE element IN treatment_filter.treatment_type) and ANY(element IN [''] WHERE element IN treatment_filter.treatment_agent)
         and treatment_filter.age_at_treatment_start >= [''] and treatment_filter.age_at_treatment_start <= ['']
         and treatment_response_filter.response_category in [''] and treatment_response_filter.age_at_response >= [''] and treatment_response_filter.age_at_response <= [''] 
-with id, sample_id, participant_id, study_id, sex_at_birth, race, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, file_filters, dbgap_accession
+with id, sample_id, participant_id, study_id, sex_at_birth, race, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, file_filters, dbgap_accession, diagnosis_str
 where participant_age_at_collection >= [''] and participant_age_at_collection <= [''] and ANY(element IN [''] WHERE element IN sample_anatomic_site) and sample_tumor_status in [''] and tumor_classification in ['']
 unwind file_filters as file_filter
-with id, sample_id, participant_id, study_id, sex_at_birth, race, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, file_filter, dbgap_accession
+with id, sample_id, participant_id, study_id, sex_at_birth, race, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, file_filter, dbgap_accession, diagnosis_str
 where ANY(element IN [''] WHERE element IN file_filter.data_category) and file_filter.file_type in [''] and file_filter.file_mapping_level in ['']
       and file_filter.library_selection in [''] and file_filter.library_source_material in [''] and file_filter.library_source_molecule in [''] and file_filter.library_strategy in ['']
-with distinct id, sample_id, participant_id, study_id, sex_at_birth, race, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, dbgap_accession
+with distinct id, sample_id, participant_id, study_id, sex_at_birth, race, participant_age_at_collection, sample_anatomic_site, sample_anatomic_site_str, sample_tumor_status, tumor_classification, dbgap_accession, diagnosis_str
 RETURN DISTINCT
   sample_id as `Sample ID`,
   participant_id as `Participant ID`,
   study_id as `Study ID`,
-  sample_anatomic_site_str as `Anatomic Site`,
+  sample_anatomic_site_str as `Sample Anatomic Site`,
   case participant_age_at_collection when -999 then 'Not Reported' else coalesce(participant_age_at_collection, '') end as `Age at Sample Collection`,
   sample_tumor_status as `Sample Tumor Status`,
-  tumor_classification as `Sample Tumor Classification`
+  tumor_classification as `Sample Tumor Classification`,
+  diagnosis_str as `Sample Diagnosis`
 Order by sample_id Limit 100
 
